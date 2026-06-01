@@ -1,0 +1,35 @@
+# Enterprise Marketplace Rules
+
+Always read and follow:
+
+/docs/01_PROJECT_MASTER_SPECIFICATION.md
+/docs/02_DATABASE_ARCHITECTURE.md
+/docs/03_UI_UX_DESIGN_SYSTEM.md
+/docs/04_API_ARCHITECTURE.md
+/docs/05_DEVELOPMENT_STANDARDS.md
+
+These files are the single source of truth.
+
+Technology stack:
+
+- Next.js 15+
+- React 19+
+- TypeScript
+- NestJS
+- PostgreSQL
+- Prisma
+- Redis
+- Elasticsearch
+- Cloudflare R2
+
+Requirements:
+
+- Multi-vendor marketplace
+- SEO-first architecture
+- Mobile-first UI
+- Enterprise RBAC
+- AI-ready architecture
+
+Never generate code that conflicts with the specification documents.
+
+Generate production-ready code only.

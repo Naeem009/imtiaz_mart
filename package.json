@@ -1,0 +1,28 @@
+{
+  "name": "imtiaz-mart",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@imtiaz-mart/web",
+    "dev:web": "npm run dev --workspace=@imtiaz-mart/web",
+    "dev:api": "npm run dev --workspace=@imtiaz-mart/api",
+    "build": "npm run build --workspaces --if-present",
+    "build:web": "npm run build --workspace=@imtiaz-mart/web",
+    "build:api": "npm run build --workspace=@imtiaz-mart/api",
+    "lint": "npm run lint --workspaces --if-present",
+    "db:generate": "npm run generate --workspace=@imtiaz-mart/database",
+    "db:migrate": "npm run migrate:dev --workspace=@imtiaz-mart/database",
+    "db:studio": "npm run studio --workspace=@imtiaz-mart/database",
+    "db:seed": "npm run seed --workspace=@imtiaz-mart/database",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "postinstall": "npm run build --workspace=@imtiaz-mart/shared && npm run build --workspace=@imtiaz-mart/database && npm run generate --workspace=@imtiaz-mart/database"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
