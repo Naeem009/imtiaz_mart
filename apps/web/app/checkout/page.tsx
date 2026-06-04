@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { ShopShell } from "@/components/layout/shop-shell";
-import { checkoutAction } from "@/lib/cart/actions";
 import { fetchCart } from "@/lib/cart/api";
+import { fetchAddresses } from "@/lib/customer/api";
 import { getSession } from "@/lib/auth/session";
 import { formatPrice } from "@/lib/utils/currency";
 
@@ -22,7 +23,7 @@ export default async function CheckoutPage({
   }
 
   const { error } = await searchParams;
-  const cart = await fetchCart();
+  const [cart, addresses] = await Promise.all([fetchCart(), fetchAddresses()]);
 
   if (!cart?.items.length) {
     redirect("/cart");
@@ -71,120 +72,26 @@ export default async function CheckoutPage({
           </dl>
         </div>
 
-        <form action={checkoutAction} className="mt-8 space-y-6">
-          <fieldset className="space-y-4">
-            <legend className="text-lg font-semibold text-primary">
-              Shipping address
-            </legend>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium" htmlFor="shippingName">
-                Full name
-              </label>
-              <input
-                id="shippingName"
-                name="shippingName"
-                required
-                defaultValue={[user.firstName, user.lastName].filter(Boolean).join(" ")}
-                className="w-full rounded-lg border border-border px-4 py-2.5 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium" htmlFor="shippingPhone">
-                Phone
-              </label>
-              <input
-                id="shippingPhone"
-                name="shippingPhone"
-                type="tel"
-                className="w-full rounded-lg border border-border px-4 py-2.5 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium" htmlFor="shippingLine1">
-                Address line 1
-              </label>
-              <input
-                id="shippingLine1"
-                name="shippingLine1"
-                required
-                className="w-full rounded-lg border border-border px-4 py-2.5 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium" htmlFor="shippingLine2">
-                Address line 2 (optional)
-              </label>
-              <input
-                id="shippingLine2"
-                name="shippingLine2"
-                className="w-full rounded-lg border border-border px-4 py-2.5 text-sm"
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium" htmlFor="shippingCity">
-                  City
-                </label>
-                <input
-                  id="shippingCity"
-                  name="shippingCity"
-                  required
-                  className="w-full rounded-lg border border-border px-4 py-2.5 text-sm"
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium" htmlFor="shippingPostal">
-                  Postal code
-                </label>
-                <input
-                  id="shippingPostal"
-                  name="shippingPostal"
-                  required
-                  className="w-full rounded-lg border border-border px-4 py-2.5 text-sm"
-                />
-              </div>
-            </div>
-            <input type="hidden" name="shippingCountry" value="PK" />
-          </fieldset>
-
-          <fieldset className="space-y-3">
-            <legend className="text-lg font-semibold text-primary">Payment</legend>
-            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4 has-[:checked]:border-accent has-[:checked]:bg-accent/5">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="cod"
-                defaultChecked
-                className="text-accent"
-              />
-              <span>
-                <span className="font-medium text-primary">Cash on delivery</span>
-                <span className="mt-0.5 block text-sm text-muted">
-                  Pay when your order arrives
-                </span>
-              </span>
-            </label>
-            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4 opacity-60">
-              <input type="radio" name="paymentMethod" value="card" disabled />
-              <span>
-                <span className="font-medium text-primary">Card payment</span>
-                <span className="mt-0.5 block text-sm text-muted">Coming soon</span>
-              </span>
-            </label>
-          </fieldset>
-
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-cta py-4 text-sm font-semibold text-white hover:opacity-90"
-          >
-            Place order — {formatPrice(total)}
-          </button>
-        </form>
+        <CheckoutForm
+          user={user}
+          addresses={addresses}
+          subtotal={cart.subtotal}
+          shipping={shipping}
+          total={total}
+        />
 
         <p className="mt-4 text-center text-sm text-muted">
           <Link href="/cart" className="text-accent hover:underline">
             ← Back to cart
           </Link>
+          {addresses.length === 0 && (
+            <>
+              {" · "}
+              <Link href="/account/addresses" className="text-accent hover:underline">
+                Save addresses for faster checkout
+              </Link>
+            </>
+          )}
         </p>
       </div>
     </ShopShell>

@@ -26,9 +26,17 @@ async function clearAuthCookies() {
   store.delete(AUTH_COOKIES.refreshToken);
 }
 
+function safeRedirect(path: string | null): string {
+  if (!path || !path.startsWith("/") || path.startsWith("//")) {
+    return "/account";
+  }
+  return path;
+}
+
 export async function loginAction(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const redirectTo = safeRedirect(formData.get("redirect") as string | null);
 
   const res = await fetch(`${siteConfig.apiUrl}/auth/login`, {
     method: "POST",
@@ -41,12 +49,14 @@ export async function loginAction(formData: FormData) {
     const message =
       (err as { message?: string[] }).message?.[0] ??
       "Invalid email or password";
-    redirect(`/login?error=${encodeURIComponent(message)}`);
+    redirect(
+      `/login?error=${encodeURIComponent(message)}&redirect=${encodeURIComponent(redirectTo)}`,
+    );
   }
 
   const data = (await res.json()) as AuthResponse;
   await setAuthCookies(data);
-  redirect("/account");
+  redirect(redirectTo);
 }
 
 export async function registerAction(formData: FormData) {

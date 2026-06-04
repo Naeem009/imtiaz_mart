@@ -3,9 +3,13 @@ import type { AuthUser } from "@imtiaz-mart/shared";
 import { siteConfig } from "@/config/site";
 import { AUTH_COOKIES } from "./cookies";
 
-export async function getSession(): Promise<AuthUser | null> {
+export async function getAccessToken(): Promise<string | undefined> {
   const store = await cookies();
-  const accessToken = store.get(AUTH_COOKIES.accessToken)?.value;
+  return store.get(AUTH_COOKIES.accessToken)?.value;
+}
+
+export async function getSession(): Promise<AuthUser | null> {
+  const accessToken = await getAccessToken();
   if (!accessToken) return null;
 
   const res = await fetch(`${siteConfig.apiUrl}/auth/me`, {

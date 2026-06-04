@@ -41,16 +41,41 @@ export async function removeCartItemAction(formData: FormData) {
 }
 
 export async function checkoutAction(formData: FormData) {
+  const addressId = formData.get("addressId") as string | null;
+
+  let shipping = {
+    shippingName: formData.get("shippingName") as string,
+    shippingPhone: (formData.get("shippingPhone") as string) || undefined,
+    shippingLine1: formData.get("shippingLine1") as string,
+    shippingLine2: (formData.get("shippingLine2") as string) || undefined,
+    shippingCity: formData.get("shippingCity") as string,
+    shippingState: (formData.get("shippingState") as string) || undefined,
+    shippingPostal: formData.get("shippingPostal") as string,
+    shippingCountry: (formData.get("shippingCountry") as string) || "PK",
+  };
+
+  if (addressId && addressId !== "new") {
+    const { fetchAddresses } = await import("@/lib/customer/api");
+    const addresses = await fetchAddresses();
+    const addr = addresses.find((a) => a.id === addressId);
+    if (addr) {
+      const name = (formData.get("shippingName") as string)?.trim();
+      shipping = {
+        shippingName: name || addr.label,
+        shippingPhone: addr.phone ?? undefined,
+        shippingLine1: addr.line1,
+        shippingLine2: addr.line2 ?? undefined,
+        shippingCity: addr.city,
+        shippingState: addr.state ?? undefined,
+        shippingPostal: addr.postalCode,
+        shippingCountry: addr.country,
+      };
+    }
+  }
+
   try {
     const order = await createOrderApi({
-      shippingName: formData.get("shippingName") as string,
-      shippingPhone: (formData.get("shippingPhone") as string) || undefined,
-      shippingLine1: formData.get("shippingLine1") as string,
-      shippingLine2: (formData.get("shippingLine2") as string) || undefined,
-      shippingCity: formData.get("shippingCity") as string,
-      shippingState: (formData.get("shippingState") as string) || undefined,
-      shippingPostal: formData.get("shippingPostal") as string,
-      shippingCountry: (formData.get("shippingCountry") as string) || "PK",
+      ...shipping,
       paymentMethod: (formData.get("paymentMethod") as "cod" | "card") || "cod",
     });
     revalidatePath("/cart");

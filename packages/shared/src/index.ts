@@ -12,3 +12,4 @@ export type {
 } from "./types/catalog";
 export type { CartDto, CartItemDto } from "./types/cart";
 export type { OrderDto, OrderItemDto } from "./types/order";
+export type { CustomerAddressDto } from "./types/customer";

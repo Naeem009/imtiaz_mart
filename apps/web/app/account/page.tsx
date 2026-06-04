@@ -1,26 +1,17 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
 import { logoutAction } from "@/lib/auth/actions";
+import { AccountShell } from "@/components/layout/account-shell";
 import { getSession } from "@/lib/auth/session";
-import { siteConfig } from "@/config/site";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "My account",
-};
+export const metadata = { title: "My account" };
 
 export default async function AccountPage() {
   const user = await getSession();
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login?redirect=/account");
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-16">
-      <Link href="/" className="text-sm text-muted hover:text-text">
-        &larr; Back to store
-      </Link>
-      <h1 className="mt-6 text-3xl font-bold text-primary">My account</h1>
-      <div className="mt-8 rounded-xl border border-border bg-surface p-8">
+    <AccountShell active="/account" title="My account">
+      <div className="rounded-xl border border-border bg-surface p-8">
         <dl className="space-y-4">
           <div>
             <dt className="text-sm text-muted">Email</dt>
@@ -34,41 +25,16 @@ export default async function AccountPage() {
               </dd>
             </div>
           )}
-          <div>
-            <dt className="text-sm text-muted">Roles</dt>
-            <dd className="flex flex-wrap gap-2">
-              {user.roles.map((role) => (
-                <span
-                  key={role}
-                  className="rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent"
-                >
-                  {role}
-                </span>
-              ))}
-            </dd>
-          </div>
         </dl>
-        <div className="mt-8 flex flex-wrap gap-4">
-          <Link
-            href="/account/orders"
-            className="rounded-lg border border-border px-6 py-2.5 text-sm font-medium text-primary hover:bg-surface"
-          >
-            My orders
-          </Link>
-        </div>
-
         <form action={logoutAction} className="mt-8">
           <button
             type="submit"
-            className="rounded-lg border border-border px-6 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-background"
+            className="rounded-lg border border-border px-6 py-2.5 text-sm font-medium text-primary hover:bg-background"
           >
             Sign out
           </button>
         </form>
       </div>
-      <p className="mt-6 text-center text-xs text-muted">
-        {siteConfig.name} customer portal
-      </p>
-    </div>
+    </AccountShell>
   );
 }

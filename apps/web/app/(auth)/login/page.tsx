@@ -9,9 +9,9 @@ export const metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; redirect?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, redirect: redirectTo } = await searchParams;
 
   return (
     <div className="flex min-h-full flex-col items-center justify-center px-4 py-16">
@@ -27,6 +27,9 @@ export default async function LoginPage({
         </div>
         <div className="rounded-xl border border-border bg-surface p-8 shadow-sm">
           <form action={loginAction} className="space-y-4">
+            {redirectTo && (
+              <input type="hidden" name="redirect" value={redirectTo} />
+            )}
             {error && (
               <p
                 className="rounded-lg bg-error/10 px-4 py-3 text-sm text-error"
