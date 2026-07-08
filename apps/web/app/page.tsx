@@ -2,9 +2,11 @@ import { AnnouncementBar } from "@/components/home/announcement-bar";
 import { BlogSection } from "@/components/home/blog-section";
 import { BrandsSection } from "@/components/home/brands-section";
 import { CategorySection } from "@/components/home/category-section";
+import { FeatureStrip } from "@/components/home/feature-strip";
 import { FlashSaleSection } from "@/components/home/flash-sale-section";
 import { HeroSlider } from "@/components/home/hero-slider";
 import { InstagramSection } from "@/components/home/instagram-section";
+import { MarketplaceQuickLinks } from "@/components/home/marketplace-quick-links";
 import { NewsletterSection } from "@/components/home/newsletter-section";
 import { ProductSection } from "@/components/home/product-section";
 import { ReviewsSection } from "@/components/home/reviews-section";
@@ -49,6 +51,8 @@ export default function HomePage() {
 
       <main>
         <HeroSlider slides={heroSlides} />
+        <FeatureStrip />
+        <MarketplaceQuickLinks />
 
         <CategorySection
           title="Featured Categories"
