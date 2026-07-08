@@ -10,6 +10,7 @@ export type {
   ProductListItem,
   ProductVariantDto,
 } from "./types/catalog";
+export type { VendorOrderDto, VendorProductDto, VendorProfileDto } from "./types/vendor";
 export type { CartDto, CartItemDto } from "./types/cart";
 export type { OrderDto, OrderItemDto } from "./types/order";
 export type { CustomerAddressDto } from "./types/customer";

@@ -31,6 +31,8 @@ model User {
   oauthAccounts OAuthAccount[]
   devices       Device[]
   customer      Customer?
+  ownedVendor   Vendor?
+  vendorStaff   VendorStaff[]
 
   @@map("users")
 }
@@ -142,6 +144,7 @@ model Device {
 
 model Vendor {
   id          String    @id @default(uuid())
+  ownerId     String?   @unique @map("owner_id")
   name        String
   slug        String    @unique
   description String?
@@ -153,9 +156,26 @@ model Vendor {
   updatedAt   DateTime  @updatedAt @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
 
+  owner    User?         @relation(fields: [ownerId], references: [id])
+  staff    VendorStaff[]
   products Product[]
 
   @@map("vendors")
+}
+
+model VendorStaff {
+  id        String   @id @default(uuid())
+  vendorId  String   @map("vendor_id")
+  userId    String   @map("user_id")
+  title     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, userId])
+  @@index([userId])
+  @@map("vendor_staff")
 }
 
 // ─── Product catalog ───────────────────────────────────────────────────────
