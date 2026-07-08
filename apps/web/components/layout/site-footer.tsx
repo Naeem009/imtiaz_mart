@@ -53,6 +53,9 @@ export function SiteFooter() {
             &copy; {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-white/60">
+            <Link href="/vendors" className="hover:text-white">
+              Browse Vendors
+            </Link>
             <Link href="/vendor/register" className="hover:text-white">
               Sell on {siteConfig.name}
             </Link>

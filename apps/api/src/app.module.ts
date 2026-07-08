@@ -13,6 +13,7 @@ import { OrdersModule } from "@/modules/orders/orders.module";
 import { HealthModule } from "@/modules/health/health.module";
 import { PrismaModule } from "@/modules/prisma/prisma.module";
 import { ProductsModule } from "@/modules/products/products.module";
+import { VendorsModule } from "@/modules/vendors/vendors.module";
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ProductsModule } from "@/modules/products/products.module";
     HealthModule,
     AuthModule,
     ProductsModule,
+    VendorsModule,
     CategoriesModule,
     BrandsModule,
     CartModule,

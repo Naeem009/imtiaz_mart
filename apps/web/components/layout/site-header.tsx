@@ -43,6 +43,12 @@ export async function SiteHeader() {
             Shop
           </Link>
           <Link
+            href="/vendors"
+            className="hidden text-muted hover:text-text lg:inline"
+          >
+            Vendors
+          </Link>
+          <Link
             href="/deals"
             className="hidden text-muted hover:text-text lg:inline"
           >
