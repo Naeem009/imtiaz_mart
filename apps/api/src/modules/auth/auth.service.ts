@@ -8,6 +8,7 @@ import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
+import { OAuth2Client } from "google-auth-library";
 import { v7 as uuidv7 } from "uuid";
 import { PrismaService } from "@/modules/prisma/prisma.service";
 import { CustomersService } from "@/modules/customers/customers.service";
@@ -17,6 +18,10 @@ import { JwtPayload } from "./interfaces/jwt-payload.interface";
 
 const DEFAULT_ROLE = "customer";
 const BCRYPT_ROUNDS = 12;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT = GOOGLE_CLIENT_ID
+  ? new OAuth2Client(GOOGLE_CLIENT_ID)
+  : null;
 
 export interface AuthTokens {
   accessToken: string;
@@ -103,6 +108,90 @@ export class AuthService {
     }
 
     await this.customers.ensureCustomer(user.id);
+
+    const roles = user.roles.map((r: { role: { slug: string } }) => r.role.slug);
+    const tokens = await this.issueTokens(user.id, user.email, roles);
+
+    if (meta?.userAgent || meta?.ip) {
+      await this.prisma.client.device.create({
+        data: {
+          id: uuidv7(),
+          userId: user.id,
+          userAgent: meta.userAgent,
+          ipAddress: meta.ip,
+        },
+      });
+    }
+
+    return {
+      user: this.toUserResponse(user),
+      ...tokens,
+    };
+  }
+
+  async socialLogin(provider: "google", idToken: string, meta?: { userAgent?: string; ip?: string }) {
+    if (provider !== "google") {
+      throw new UnauthorizedException("Unsupported provider");
+    }
+
+    if (!GOOGLE_CLIENT) {
+      throw new UnauthorizedException("Google OAuth is not configured");
+    }
+
+    const ticket = await GOOGLE_CLIENT.verifyIdToken({
+      idToken,
+      audience: GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload?.email || !payload.sub) {
+      throw new UnauthorizedException("Google account could not be verified");
+    }
+
+    const email = payload.email.toLowerCase();
+    let user = await this.prisma.client.user.findFirst({
+      where: { email, deletedAt: null },
+      include: { roles: { include: { role: true } } },
+    });
+
+    if (!user) {
+      const role = await this.prisma.client.role.findUnique({
+        where: { slug: DEFAULT_ROLE },
+      });
+      if (!role) {
+        throw new ConflictException(
+          "Default role not seeded. Run: npm run db:seed",
+        );
+      }
+
+      user = await this.prisma.client.user.create({
+        data: {
+          id: uuidv7(),
+          email,
+          firstName: payload.given_name ?? null,
+          lastName: payload.family_name ?? null,
+          avatarUrl: payload.picture ?? null,
+          roles: { create: { roleId: role.id } },
+        },
+        include: { roles: { include: { role: true } } },
+      });
+      await this.customers.ensureCustomer(user.id);
+    }
+
+    const existingOAuth = await this.prisma.client.oauthAccount.findFirst({
+      where: { provider, providerUserId: payload.sub },
+    });
+
+    if (!existingOAuth) {
+      await this.prisma.client.oauthAccount.create({
+        data: {
+          id: uuidv7(),
+          userId: user.id,
+          provider,
+          providerUserId: payload.sub,
+        },
+      });
+    }
 
     const roles = user.roles.map((r: { role: { slug: string } }) => r.role.slug);
     const tokens = await this.issueTokens(user.id, user.email, roles);

@@ -18,6 +18,7 @@ import { LoginDto } from "./dto/login.dto";
 import { RefreshTokenDto } from "./dto/refresh-token.dto";
 import { RegisterDto } from "./dto/register.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
+import { SocialLoginDto } from "./dto/social-login.dto";
 import { JwtPayload } from "./interfaces/jwt-payload.interface";
 
 @ApiTags("auth")
@@ -39,6 +40,17 @@ export class AuthController {
   @ApiOperation({ summary: "Login with email and password" })
   login(@Body() dto: LoginDto, @Req() req: Request) {
     return this.authService.login(dto, {
+      userAgent: req.headers["user-agent"],
+      ip: req.ip,
+    });
+  }
+
+  @Public()
+  @Post("social-login")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Login with a supported social provider" })
+  socialLogin(@Body() dto: SocialLoginDto, @Req() req: Request) {
+    return this.authService.socialLogin(dto.provider, dto.idToken, {
       userAgent: req.headers["user-agent"],
       ip: req.ip,
     });

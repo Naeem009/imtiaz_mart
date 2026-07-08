@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GoogleLoginButton } from "@/components/auth/google-login-button";
 import { registerAction } from "@/lib/auth/actions";
 import { siteConfig } from "@/config/site";
 
@@ -54,6 +55,16 @@ export default async function RegisterPage({
               Create account
             </button>
           </form>
+
+          <div className="mt-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs uppercase tracking-[0.2em] text-muted">or</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          <div className="mt-5">
+            <GoogleLoginButton redirect="/account" />
+          </div>
         </div>
         <p className="mt-6 text-center text-sm text-muted">
           Already have an account?{" "}

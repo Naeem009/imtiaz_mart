@@ -59,6 +59,29 @@ export async function loginAction(formData: FormData) {
   redirect(redirectTo);
 }
 
+export async function googleLoginAction(formData: FormData) {
+  const idToken = formData.get("idToken") as string;
+  const redirectTo = safeRedirect(formData.get("redirect") as string | null);
+
+  const res = await fetch(`${siteConfig.apiUrl}/auth/social-login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ provider: "google", idToken }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const message =
+      (err as { message?: string[] }).message?.[0] ??
+      "Google sign-in failed";
+    redirect(`/login?error=${encodeURIComponent(message)}&redirect=${encodeURIComponent(redirectTo)}`);
+  }
+
+  const data = (await res.json()) as AuthResponse;
+  await setAuthCookies(data);
+  redirect(redirectTo);
+}
+
 export async function registerAction(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
