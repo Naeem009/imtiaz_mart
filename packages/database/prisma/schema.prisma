@@ -564,3 +564,26 @@ model SocialContentModerationLog {
   @@index([queueId])
   @@map("social_content_moderation_logs")
 }
+
+enum SubscriptionTier {
+  STARTER
+  GROWTH
+  PREMIUM
+  ENTERPRISE
+
+  @@map("subscription_tier")
+}
+
+model VendorSubscription {
+  id        String   @id @default(uuid())
+  vendorId  String   @map("vendor_id")
+  tier      SubscriptionTier
+  expiresAt DateTime?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId])
+  @@index([vendorId])
+  @@map("vendor_subscriptions")
+}

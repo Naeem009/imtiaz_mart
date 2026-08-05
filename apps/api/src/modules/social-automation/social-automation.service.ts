@@ -21,6 +21,21 @@ export class SocialAutomationService {
     return account;
   }
 
+    async storeOAuthTokens(vendorId: string, provider: string, providerAccountId: string, accessToken?: string, refreshToken?: string) {
+      // encrypt tokens and store on the vendorSocialAccount row
+      const { encryptText } = require("@/lib/crypto");
+      const data: any = {};
+      if (accessToken) data.accessToken = encryptText(accessToken);
+      if (refreshToken) data.refreshToken = encryptText(refreshToken);
+
+      const account = await (this.prisma.client as any).vendorSocialAccount.upsert({
+        where: { provider_providerAccountId: { provider, providerAccountId } },
+        create: { vendorId, provider, providerAccountId, scopes: [], isActive: true, accessToken: data.accessToken, refreshToken: data.refreshToken },
+        update: { accessToken: data.accessToken, refreshToken: data.refreshToken, isActive: true },
+      } as any);
+
+      return account;
+    }
   async disconnectAccount(id: string) {
     return (this.prisma.client as any).vendorSocialAccount.update({ where: { id }, data: { isActive: false } });
   }

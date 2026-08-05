@@ -3,6 +3,9 @@ import { SocialAutomationService } from "./social-automation.service";
 import { ConnectAccountDto } from "./dto/connect-account.dto";
 import { CreateRuleDto } from "./dto/create-rule.dto";
 import { JwtAuthGuard } from "@/common/guards/jwt-auth.guard";
+import { OAuthCallbackDto } from "./dto/oauth-callback.dto";
+
+// NOTE: In production, OAuth flows should be implemented with proper redirects and CSRF protection.
 
 @UseGuards(JwtAuthGuard)
 @Controller("/social")
@@ -19,6 +22,12 @@ export class SocialAutomationController {
   async connect(@Req() req: any, @Body() body: ConnectAccountDto) {
     const vendorId = req.user?.vendorId;
     return this.service.connectAccount(vendorId, body.provider, body.providerAccountId, body.scopes);
+  }
+
+  @Post("/oauth/callback")
+  async oauthCallback(@Req() req: any, @Body() body: OAuthCallbackDto) {
+    const vendorId = req.user?.vendorId;
+    return this.service.storeOAuthTokens(vendorId, body.provider, body.providerAccountId, body.accessToken, body.refreshToken);
   }
 
   @Post("/disconnect/:id")
