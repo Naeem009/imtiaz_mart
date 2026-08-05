@@ -19,6 +19,7 @@ import { VisualSearchModule } from "@/modules/visual-search/visual-search.module
 import { UploadsModule } from "@/modules/uploads/uploads.module";
 import { FeedsModule } from "@/modules/feeds/feeds.module";
 import { SocialAutomationModule } from "@/modules/social-automation/social-automation.module";
+import { DashboardModule } from "@/modules/dashboard/dashboard.module";
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { SocialAutomationModule } from "@/modules/social-automation/social-autom
     UploadsModule,
     FeedsModule,
     SocialAutomationModule,
+    DashboardModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

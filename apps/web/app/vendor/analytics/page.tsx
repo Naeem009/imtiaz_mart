@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ShopShell } from "@/components/layout/shop-shell";
 import { getSession } from "@/lib/auth/session";
+import VendorStats from "@/components/vendor/vendor-stats";
 
 export const metadata = { title: "Vendor analytics" };
 
@@ -26,19 +27,8 @@ export default async function VendorAnalyticsPage() {
           </Link>
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-3">
-          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-            <p className="text-sm text-muted">Revenue</p>
-            <p className="mt-2 text-3xl font-semibold text-primary">$12,840</p>
-          </div>
-          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-            <p className="text-sm text-muted">Conversion rate</p>
-            <p className="mt-2 text-3xl font-semibold text-primary">4.8%</p>
-          </div>
-          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-            <p className="text-sm text-muted">Returning customers</p>
-            <p className="mt-2 text-3xl font-semibold text-primary">18%</p>
-          </div>
+        <div className="mt-8">
+          <VendorStats />
         </div>
       </div>
     </ShopShell>
