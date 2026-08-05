@@ -1,6 +1,6 @@
 # DATABASE ARCHITECTURE
 
-Database Engine: PostgreSQL 17+
+Database Engine: PostgreSQL 17+ (with pgvector extension for embeddings)
 
 ORM: Prisma
 
@@ -59,6 +59,68 @@ VendorPayouts
 VendorSubscriptions
 
 VendorAnalytics
+
+---
+
+# SOCIAL MEDIA AUTOMATION MODULE
+
+## Mode A — Vendor Channel (vendor-owned accounts)
+
+VendorSocialAccounts
+
+SocialAutomationRules
+
+SocialAutomationTriggers
+
+SocialPostQueue
+
+SocialPostTemplates
+
+SocialPostAssets
+
+SocialPostAnalytics
+
+## Mode B — Store Channel (marketplace-owned accounts)
+
+StoreSocialAccounts
+
+StoreCurationRules
+
+StoreSocialPostQueue
+
+StoreSocialPostAnalytics
+
+VendorStoreFeatureOptIn
+
+SponsoredSlotBookings
+
+## Shared
+
+SocialPlatformWebhookEvents
+
+SocialContentModerationLogs
+
+---
+
+# VISUAL SEARCH MODULE
+
+ProductImageEmbeddings (vector, pgvector extension)
+
+VisualSearchQueries
+
+VisualSearchResults
+
+---
+
+# AI AGENT COMMERCE MODULE
+
+AgentProductFeedExports (UCP / ACP / Perplexity-format snapshots)
+
+AgentCommerceManifest (`.well-known` manifest config)
+
+AgentEligibilityFlags (per-product: is_eligible_search, is_eligible_checkout)
+
+AgentOrderAttribution (which agent/protocol sourced the order)
 
 ---
 
@@ -135,6 +197,8 @@ PaymentMethods
 PaymentLogs
 
 VendorPayouts
+
+EscrowHoldings
 
 ---
 

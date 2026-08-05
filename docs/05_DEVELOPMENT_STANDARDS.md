@@ -130,6 +130,10 @@ SQL Injection Protection
 
 Audit Logging
 
+OAuth Token Encryption At Rest (Social Connectors)
+
+Social Platform API Policy Compliance (rate limits, no spam posting)
+
 ---
 
 # PERFORMANCE
@@ -168,6 +172,10 @@ Prometheus
 
 Automated Backups
 
+Redis + BullMQ Worker Processes (Social Post Scheduling Queue)
+
+Dead-Letter Queue Monitoring
+
 ---
 
 # CURSOR RULE
@@ -183,6 +191,10 @@ Always read:
 04_API_ARCHITECTURE.md
 
 05_DEVELOPMENT_STANDARDS.md
+
+06_SOCIAL_MEDIA_AUTOMATION_ENGINE.md
+
+07_AI_AGENT_COMMERCE_READINESS.md
 
 before generating code.
 

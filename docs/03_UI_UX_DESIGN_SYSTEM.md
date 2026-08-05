@@ -70,6 +70,20 @@ Fallback: Geist
 
 ---
 
+# SEARCH & DISCOVERY
+
+Search Bar with Autosuggest
+
+Voice Search Icon
+
+Visual Search Icon (camera / upload photo → "find products like this")
+
+AI Search Results (semantic, not just keyword match)
+
+Filters & Sort
+
+---
+
 # HOMEPAGE
 
 Announcement Bar
@@ -154,6 +168,54 @@ Vendor Information
 
 ---
 
+# VENDOR PORTAL — MARKETING / SOCIAL AUTOMATION
+
+Connected Accounts Grid (platform cards: Facebook, Instagram, TikTok, Pinterest, X, WhatsApp)
+
+Connect / Disconnect Buttons (OAuth)
+
+Automation Toggle (per platform, off by default)
+
+Plan Gate Banner (upsell to Premium if on lower tier)
+
+Trigger Event Selector (New Product, Price Drop, Back In Stock, Flash Sale, Restock)
+
+Posting Schedule Calendar View
+
+Post Approval Queue (review-before-publish mode)
+
+AI Caption Preview Card (editable before publish)
+
+Tone/Style Presets Selector
+
+Frequency Cap & Blackout Hours Controls
+
+Excluded Products/Categories List
+
+Social Performance Dashboard (reach, engagement, clicks, attributable revenue)
+
+Audit/History Log of Published Posts
+
+Store-Channel Opt-In Card ("Allow my products to be featured on [Store]'s official social") + Tag-My-Handle Toggle + Excluded Products List + "Featured by [Store]" Performance (read-only)
+
+---
+
+# ADMIN PORTAL — STORE SOCIAL CHANNEL (Marketing Manager)
+
+Store Accounts Panel (marketplace's own connected accounts)
+
+Curation Weight Sliders (Trending / New Arrivals / Best Sellers / Sponsored ratio)
+
+Editorial Calendar (queue view, approve/edit/reject, drag-to-reschedule)
+
+Sponsored Slot Booking Manager
+
+Fairness Audit Report (posting frequency by vendor, flags imbalance)
+
+Store Channel Performance Dashboard
+
+---
+
 # MOBILE EXPERIENCE
 
 Bottom Navigation
@@ -162,7 +224,7 @@ Home
 
 Categories
 
-Search
+Search (includes Visual Search camera button)
 
 Cart
 
