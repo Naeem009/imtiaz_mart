@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Shop",
-  description: "Browse all products on Imtiaz Mart",
+  description: "Browse all products on ATVOO",
 };
 
 export default async function ShopPage({

@@ -14,6 +14,7 @@ import { HealthModule } from "@/modules/health/health.module";
 import { PrismaModule } from "@/modules/prisma/prisma.module";
 import { ProductsModule } from "@/modules/products/products.module";
 import { VendorsModule } from "@/modules/vendors/vendors.module";
+import { AgentCommerceModule } from "@/modules/agent-commerce/agent-commerce.module";
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { VendorsModule } from "@/modules/vendors/vendors.module";
     BrandsModule,
     CartModule,
     OrdersModule,
+    AgentCommerceModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

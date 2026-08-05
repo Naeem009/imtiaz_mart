@@ -178,12 +178,12 @@ export class AuthService {
       await this.customers.ensureCustomer(user.id);
     }
 
-    const existingOAuth = await this.prisma.client.oauthAccount.findFirst({
+    const existingOAuth = await this.prisma.client.oAuthAccount.findFirst({
       where: { provider, providerUserId: payload.sub },
     });
 
     if (!existingOAuth) {
-      await this.prisma.client.oauthAccount.create({
+      await this.prisma.client.oAuthAccount.create({
         data: {
           id: uuidv7(),
           userId: user.id,

@@ -5,7 +5,7 @@ import { fetchProducts } from "@/lib/catalog/fetch";
 
 export const metadata = {
   title: "Deals",
-  description: "Browse limited-time discounts and special offers on Imtiaz Mart",
+  description: "Browse limited-time discounts and special offers on ATVOO",
 };
 
 export default async function DealsPage() {

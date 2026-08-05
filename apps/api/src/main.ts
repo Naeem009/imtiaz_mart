@@ -7,7 +7,9 @@ import { AppModule } from "./app.module";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix("api");
+  app.setGlobalPrefix("api", {
+    exclude: [".well-known/(.*)", "llms.txt", "feeds/(.*)"],
+  });
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: "1",
@@ -30,7 +32,7 @@ async function bootstrap() {
   const port = config.get<number>("API_PORT", 3001);
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle("Imtiaz Mart API")
+    .setTitle("ATVOO API")
     .setDescription("Enterprise multi-vendor marketplace REST API")
     .setVersion("1.0")
     .addBearerAuth()

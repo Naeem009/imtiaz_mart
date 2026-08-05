@@ -1,5 +1,5 @@
 export const siteConfig = {
-  name: "Imtiaz Mart",
+  name: "ATVOO",
   description:
     "Enterprise multi-vendor marketplace — premium shopping, trusted vendors, fast delivery.",
   url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",

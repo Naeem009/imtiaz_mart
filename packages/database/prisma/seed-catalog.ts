@@ -192,7 +192,7 @@ export async function seedCatalog() {
         id: uuidv7(),
         name: p.name,
         slug: p.slug,
-        shortDescription: `Premium ${p.name} from verified vendors on Imtiaz Mart.`,
+        shortDescription: `Premium ${p.name} from verified vendors on ATVOO.`,
         description: `Shop ${p.name} with fast delivery and secure checkout. Authentic products from trusted sellers.`,
         price: p.price,
         compareAtPrice: p.compareAtPrice,
