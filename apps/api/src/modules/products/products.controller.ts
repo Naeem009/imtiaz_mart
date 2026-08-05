@@ -1,8 +1,9 @@
-import { Controller, Get, Param, Query } from "@nestjs/common";
+import { Controller, Get, Param, Query, Post, Body } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { API_VERSION } from "@imtiaz-mart/shared";
 import { Public } from "@/common/decorators/public.decorator";
 import { ProductsQueryDto } from "./dto/products-query.dto";
+import { VisualSearchDto } from "./dto/visual-search.dto";
 import { ProductsService } from "./products.service";
 
 @ApiTags("products")
@@ -29,6 +30,13 @@ export class ProductsController {
   @ApiOperation({ summary: "Filter products" })
   filter(@Query() query: ProductsQueryDto) {
     return this.productsService.findAll(query);
+  }
+
+  @Public()
+  @Post("visual-search")
+  @ApiOperation({ summary: "Visual search products by image or hint" })
+  visualSearch(@Body() body: VisualSearchDto) {
+    return this.productsService.visualSearch(body);
   }
 
   @Public()

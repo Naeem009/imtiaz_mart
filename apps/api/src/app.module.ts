@@ -15,6 +15,7 @@ import { PrismaModule } from "@/modules/prisma/prisma.module";
 import { ProductsModule } from "@/modules/products/products.module";
 import { VendorsModule } from "@/modules/vendors/vendors.module";
 import { AgentCommerceModule } from "@/modules/agent-commerce/agent-commerce.module";
+import { VisualSearchModule } from "@/modules/visual-search/visual-search.module";
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AgentCommerceModule } from "@/modules/agent-commerce/agent-commerce.mod
     CartModule,
     OrdersModule,
     AgentCommerceModule,
+    VisualSearchModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

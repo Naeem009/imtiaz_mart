@@ -73,6 +73,38 @@ export class ProductsService {
     return products.map(mapProductListItem);
   }
 
+  async visualSearch(body: { imageUrl?: string; query?: string }) {
+    const where: Prisma.ProductWhereInput = {
+      status: ProductStatus.ACTIVE,
+      deletedAt: null,
+    };
+
+    if (body.query) {
+      where.OR = [
+        { name: { contains: body.query, mode: "insensitive" } },
+        { shortDescription: { contains: body.query, mode: "insensitive" } },
+        { description: { contains: body.query, mode: "insensitive" } },
+      ];
+    }
+
+    if (body.imageUrl) {
+      where.images = {
+        some: {
+          url: { contains: body.imageUrl, mode: "insensitive" },
+        },
+      };
+    }
+
+    const products = await this.prisma.client.product.findMany({
+      where,
+      include: productInclude,
+      orderBy: [{ updatedAt: "desc" }],
+      take: 24,
+    });
+
+    return products.map(mapProductListItem);
+  }
+
   private buildWhere(query: ProductsQueryDto): Prisma.ProductWhereInput {
     const where: Prisma.ProductWhereInput = {
       status: ProductStatus.ACTIVE,
