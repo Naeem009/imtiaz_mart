@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteLogo } from "@/components/layout/site-logo";
 import { siteConfig } from "@/config/site";
 
 const footerLinks = {
@@ -35,9 +36,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">
-            <Link href="/" className="text-xl font-bold">
-              {siteConfig.name}
-            </Link>
+            <SiteLogo variant="footer" />
             <p className="mt-4 text-sm text-white/70">
               Pakistan&apos;s premium multi-vendor marketplace. Shop trusted
               vendors, fast delivery, secure checkout.

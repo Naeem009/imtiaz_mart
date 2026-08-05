@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth/session";
 import { fetchCart } from "@/lib/cart/api";
-import { siteConfig } from "@/config/site";
+import { SiteLogo } from "@/components/layout/site-logo";
 
 export async function SiteHeader() {
   const [user, cart] = await Promise.all([getSession(), fetchCart()]);
@@ -10,12 +10,7 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:h-16 sm:px-6 lg:px-8">
-        <Link
-          href="/"
-          className="shrink-0 text-lg font-semibold tracking-tight text-primary"
-        >
-          {siteConfig.name}
-        </Link>
+        <SiteLogo variant="header" priority />
 
         <form
           action="/search"

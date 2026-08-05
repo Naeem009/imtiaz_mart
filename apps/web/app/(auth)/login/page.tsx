@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GoogleLoginButton } from "@/components/auth/google-login-button";
+import { SiteLogo } from "@/components/layout/site-logo";
 import { loginAction } from "@/lib/auth/actions";
 import { siteConfig } from "@/config/site";
 
@@ -17,10 +18,8 @@ export default async function LoginPage({
   return (
     <div className="flex min-h-full flex-col items-center justify-center px-4 py-16">
       <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <Link href="/" className="text-lg font-semibold text-primary">
-            {siteConfig.name}
-          </Link>
+        <div className="mb-8 flex flex-col items-center text-center">
+          <SiteLogo variant="auth" priority />
           <h1 className="mt-6 text-2xl font-bold text-primary">Sign in</h1>
           <p className="mt-2 text-sm text-muted">
             Welcome back to {siteConfig.name}
