@@ -47,13 +47,25 @@ export class ProcessorService implements OnModuleInit {
         return;
       }
 
-      // Publish per platform (stub)
+      // Publish per platform using adapters
       for (const platform of platforms) {
         try {
-          // In a production system this would call the platform adapter
           this.logger.log(`Publishing to ${platform} — ${caption}`);
+          const { getAdapter } = require("./adapters");
+          const Adapter = getAdapter(platform);
+          let result: any = null;
+          if (Adapter) {
+            // find vendor account for this platform
+            const account = await (this.prisma.client as any).vendorSocialAccount.findFirst({ where: { vendorId, provider: platform, isActive: true } });
+            const adapter = new Adapter(this.prisma.client);
+            result = await adapter.publish(account, { productId: data.payload?.productId, productUrl: data.payload?.productUrl, imageUrl: data.payload?.imageUrl, title: caption });
+          } else {
+            // no adapter, record as skipped
+            result = { platformPostId: null, response: { skipped: true } };
+          }
+
           // Record a SocialPost row
-          await (this.prisma.client as any).socialPost.create({ data: { vendorId, queueId, platform, status: "SENT", response: {}, platformPostId: null } });
+          await (this.prisma.client as any).socialPost.create({ data: { vendorId, queueId, platform, status: "SENT", response: result.response, platformPostId: result.platformPostId } });
         } catch (err) {
           this.logger.error(`Failed publish to ${platform}: ${String(err)}`);
           await (this.prisma.client as any).socialPost.create({ data: { vendorId, queueId, platform, status: "FAILED", response: { error: String(err) } } });

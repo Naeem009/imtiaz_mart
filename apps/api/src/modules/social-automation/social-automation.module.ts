@@ -4,10 +4,11 @@ import { SocialAutomationController } from "./social-automation.controller";
 import { PrismaModule } from "@/modules/prisma/prisma.module";
 import { QueueService } from "./queue.service";
 import { ProcessorService } from "./processor.service";
+import { AutomationScheduler } from "./automation-scheduler.service";
 
 @Module({
   imports: [PrismaModule],
-  providers: [SocialAutomationService, QueueService, ProcessorService],
+  providers: [SocialAutomationService, QueueService, ProcessorService, AutomationScheduler],
   controllers: [SocialAutomationController],
 })
 export class SocialAutomationModule {}
