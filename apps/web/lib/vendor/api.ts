@@ -73,6 +73,8 @@ export async function fetchVendorStore(slug: string) {
         reviewCount: product.reviewCount,
         badge: product.badge,
         primaryImage: product.images.find((img) => img.isPrimary)?.url ?? product.images[0]?.url ?? null,
+        isEligibleSearch: true,
+        isEligibleCheckout: true,
         vendor: {
           id: product.vendor.id ?? product.vendor.slug,
           name: product.vendor.name,

@@ -55,6 +55,12 @@ export async function SiteHeader() {
             Deals
           </Link>
           <Link
+            href="/visual-search"
+            className="hidden text-muted hover:text-text lg:inline"
+          >
+            Visual Search
+          </Link>
+          <Link
             href="/cart"
             className="relative text-muted hover:text-text"
             aria-label={`Shopping cart${cartCount ? `, ${cartCount} items` : ""}`}
