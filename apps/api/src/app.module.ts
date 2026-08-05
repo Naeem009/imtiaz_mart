@@ -17,6 +17,7 @@ import { VendorsModule } from "@/modules/vendors/vendors.module";
 import { AgentCommerceModule } from "@/modules/agent-commerce/agent-commerce.module";
 import { VisualSearchModule } from "@/modules/visual-search/visual-search.module";
 import { UploadsModule } from "@/modules/uploads/uploads.module";
+import { FeedsModule } from "@/modules/feeds/feeds.module";
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { UploadsModule } from "@/modules/uploads/uploads.module";
     AgentCommerceModule,
     VisualSearchModule,
     UploadsModule,
+    FeedsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

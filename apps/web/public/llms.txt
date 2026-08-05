@@ -1,0 +1,7 @@
+ATVOO — Merchant AI guidance
+
+This site exposes machine-readable product feeds and a merchant manifest for AI shopping agents.
+
+See /.well-known/commerce-manifest.json for feed locations and policies.
+
+If you are an automated agent, please follow site policies and do not perform autonomous checkout unless explicitly allowed for a product via its `is_eligible_checkout` flag.
