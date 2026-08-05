@@ -18,6 +18,7 @@ import { AgentCommerceModule } from "@/modules/agent-commerce/agent-commerce.mod
 import { VisualSearchModule } from "@/modules/visual-search/visual-search.module";
 import { UploadsModule } from "@/modules/uploads/uploads.module";
 import { FeedsModule } from "@/modules/feeds/feeds.module";
+import { SocialAutomationModule } from "@/modules/social-automation/social-automation.module";
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { FeedsModule } from "@/modules/feeds/feeds.module";
     VisualSearchModule,
     UploadsModule,
     FeedsModule,
+    SocialAutomationModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

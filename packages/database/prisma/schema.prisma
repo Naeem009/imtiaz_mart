@@ -471,3 +471,96 @@ model Payment {
   @@index([orderId])
   @@map("payments")
 }
+
+// ─── Social Media Automation ─────────────────────────────────────────────────
+
+enum SocialPostStatus {
+  PENDING
+  SCHEDULED
+  SENT
+  FAILED
+
+  @@map("social_post_status")
+}
+
+model VendorSocialAccount {
+  id                String   @id @default(uuid())
+  vendorId          String   @map("vendor_id")
+  provider          String
+  providerAccountId String   @map("provider_account_id")
+  accessToken       String?  @map("access_token_encrypted")
+  refreshToken      String?  @map("refresh_token_encrypted")
+  scopes            String[]
+  isActive          Boolean  @default(true) @map("is_active")
+  connectedAt       DateTime @default(now()) @map("connected_at")
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([vendorId])
+  @@map("vendor_social_accounts")
+}
+
+model SocialAutomationRule {
+  id         String   @id @default(uuid())
+  vendorId   String   @map("vendor_id")
+  name       String
+  triggers   String[]
+  platforms  String[]
+  enabled    Boolean  @default(true)
+  config     Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId])
+  @@map("social_automation_rules")
+}
+
+model SocialPostQueue {
+  id         String          @id @default(uuid())
+  vendorId   String          @map("vendor_id")
+  ruleId     String?         @map("rule_id")
+  status     SocialPostStatus @default(PENDING)
+  payload    Json
+  scheduledAt DateTime?
+  attempts   Int             @default(0)
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  rule   SocialAutomationRule? @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId])
+  @@map("social_post_queue")
+}
+
+model SocialPost {
+  id              String   @id @default(uuid())
+  vendorId        String   @map("vendor_id")
+  queueId         String?  @map("queue_id")
+  platform        String
+  platformPostId  String?
+  status          SocialPostStatus @default(SENT)
+  publishedAt     DateTime?
+  response        Json?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  queue  SocialPostQueue? @relation(fields: [queueId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId])
+  @@map("social_posts")
+}
+
+model SocialContentModerationLog {
+  id        String   @id @default(uuid())
+  queueId   String   @map("queue_id")
+  verdict   String
+  reason    String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  queue SocialPostQueue @relation(fields: [queueId], references: [id], onDelete: Cascade)
+
+  @@index([queueId])
+  @@map("social_content_moderation_logs")
+}
