@@ -47,6 +47,8 @@ export class VendorProductsService {
         categoryId: dto.categoryId,
         vendorId: vendor.id,
         status: dto.status ?? ProductStatus.DRAFT,
+        isEligibleSearch: dto.isEligibleSearch ?? true,
+        isEligibleCheckout: dto.isEligibleCheckout ?? false,
       },
     });
   }
@@ -70,6 +72,8 @@ export class VendorProductsService {
         shortDescription: dto.shortDescription,
         description: dto.description,
         status: dto.status,
+        isEligibleSearch: dto.isEligibleSearch,
+        isEligibleCheckout: dto.isEligibleCheckout,
       },
     });
   }

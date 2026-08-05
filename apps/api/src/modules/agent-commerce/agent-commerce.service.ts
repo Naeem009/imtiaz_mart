@@ -76,30 +76,32 @@ export class AgentCommerceService {
       take: 500,
     });
 
-    return products.map((product) => ({
-      id: product.id,
-      title: product.name,
-      description: product.shortDescription ?? product.description ?? "",
-      link: `${process.env.APP_URL ?? "http://localhost:3000"}/products/${product.slug}`,
-      images: product.images.map((image) => image.url),
-      price: product.price.toString(),
-      currency: "PKR",
-      availability: product.variants.some((variant) => variant.stock > 0)
-        ? "in stock"
-        : "out of stock",
-      brand: product.brand?.name ?? "",
-      category: product.category.name,
-      vendor: {
-        id: product.vendor.id,
-        name: product.vendor.name,
-      },
-      sku: product.sku ?? product.id,
-      gtin: null,
-      eligibility: {
-        search: true,
-        checkout: true,
-      },
-    }));
+    return products
+      .filter((product) => product.isEligibleSearch)
+      .map((product) => ({
+        id: product.id,
+        title: product.name,
+        description: product.shortDescription ?? product.description ?? "",
+        link: `${process.env.APP_URL ?? "http://localhost:3000"}/products/${product.slug}`,
+        images: product.images.map((image) => image.url),
+        price: product.price.toString(),
+        currency: "PKR",
+        availability: product.variants.some((variant) => variant.stock > 0)
+          ? "in stock"
+          : "out of stock",
+        brand: product.brand?.name ?? "",
+        category: product.category.name,
+        vendor: {
+          id: product.vendor.id,
+          name: product.vendor.name,
+        },
+        sku: product.sku ?? product.id,
+        gtin: null,
+        eligibility: {
+          search: product.isEligibleSearch,
+          checkout: product.isEligibleCheckout,
+        },
+      }));
   }
 
   async getAcpFeed() {
@@ -118,28 +120,30 @@ export class AgentCommerceService {
       take: 500,
     });
 
-    return products.map((product) => ({
-      id: product.id,
-      title: product.name,
-      description: product.shortDescription ?? product.description ?? "",
-      link: `${process.env.APP_URL ?? "http://localhost:3000"}/products/${product.slug}`,
-      image: product.images[0]?.url ?? null,
-      price: {
-        amount: product.price.toString(),
-        currency: "PKR",
-      },
-      sku: product.sku ?? product.id,
-      category: product.category.name,
-      brand: product.brand?.name ?? "",
-      availability: product.variants.some((variant) => variant.stock > 0)
-        ? "in stock"
-        : "out of stock",
-      eligibility: {
-        search: true,
-        checkout: true,
-      },
-      payment_rails: ["strip"],
-    }));
+    return products
+      .filter((product) => product.isEligibleSearch)
+      .map((product) => ({
+        id: product.id,
+        title: product.name,
+        description: product.shortDescription ?? product.description ?? "",
+        link: `${process.env.APP_URL ?? "http://localhost:3000"}/products/${product.slug}`,
+        image: product.images[0]?.url ?? null,
+        price: {
+          amount: product.price.toString(),
+          currency: "PKR",
+        },
+        sku: product.sku ?? product.id,
+        category: product.category.name,
+        brand: product.brand?.name ?? "",
+        availability: product.variants.some((variant) => variant.stock > 0)
+          ? "in stock"
+          : "out of stock",
+        eligibility: {
+          search: product.isEligibleSearch,
+          checkout: product.isEligibleCheckout,
+        },
+        payment_rails: ["strip"],
+      }));
   }
 
   async getPerplexityFeed() {
@@ -158,22 +162,24 @@ export class AgentCommerceService {
       take: 500,
     });
 
-    return products.map((product) => ({
-      id: product.id,
-      title: product.name,
-      description: product.shortDescription ?? product.description ?? "",
-      link: `${process.env.APP_URL ?? "http://localhost:3000"}/products/${product.slug}`,
-      image_link: product.images[0]?.url ?? null,
-      price: `${product.price.toString()} PKR`,
-      availability: product.variants.some((variant) => variant.stock > 0)
-        ? "in stock"
-        : "out of stock",
-      brand: product.brand?.name ?? "",
-      category: product.category.name,
-      sku: product.sku ?? product.id,
-      gtin: null,
-      seller: "ATVOO",
-      payment_url: `${process.env.APP_URL ?? "http://localhost:3000"}/checkout?product=${product.id}`,
-    }));
+    return products
+      .filter((product) => product.isEligibleSearch)
+      .map((product) => ({
+        id: product.id,
+        title: product.name,
+        description: product.shortDescription ?? product.description ?? "",
+        link: `${process.env.APP_URL ?? "http://localhost:3000"}/products/${product.slug}`,
+        image_link: product.images[0]?.url ?? null,
+        price: `${product.price.toString()} PKR`,
+        availability: product.variants.some((variant) => variant.stock > 0)
+          ? "in stock"
+          : "out of stock",
+        brand: product.brand?.name ?? "",
+        category: product.category.name,
+        sku: product.sku ?? product.id,
+        gtin: null,
+        seller: "ATVOO",
+        payment_url: `${process.env.APP_URL ?? "http://localhost:3000"}/checkout?product=${product.id}`,
+      }));
   }
 }

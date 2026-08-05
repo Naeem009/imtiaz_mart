@@ -59,6 +59,8 @@ export function mapProductListItem(product: ProductWithRelations): ProductListIt
           slug: product.brand.slug,
         }
       : null,
+    isEligibleSearch: product.isEligibleSearch,
+    isEligibleCheckout: product.isEligibleCheckout,
   };
 }
 

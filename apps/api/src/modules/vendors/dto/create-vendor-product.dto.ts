@@ -55,6 +55,14 @@ export class CreateVendorProductDto {
   @IsEnum(ProductStatus)
   status?: ProductStatus;
 
+  @ApiPropertyOptional({ description: "Include this product in AI commerce discovery feeds", default: true })
+  @IsOptional()
+  isEligibleSearch?: boolean;
+
+  @ApiPropertyOptional({ description: "Allow this product to be eligible for agentic checkout", default: false })
+  @IsOptional()
+  isEligibleCheckout?: boolean;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

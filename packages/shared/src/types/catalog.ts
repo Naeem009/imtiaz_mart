@@ -34,6 +34,8 @@ export interface ProductListItem {
   reviewCount: number;
   badge: string | null;
   primaryImage: string | null;
+  isEligibleSearch: boolean;
+  isEligibleCheckout: boolean;
   vendor: ProductVendorDto;
   category: ProductCategoryDto;
   brand: ProductBrandDto | null;
