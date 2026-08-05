@@ -12,6 +12,8 @@ export function mapHomeProductToListItem(product: HomeProduct): ProductListItem 
     reviewCount: product.reviewCount,
     badge: product.badge ?? null,
     primaryImage: product.image,
+    isEligibleSearch: true,
+    isEligibleCheckout: true,
     vendor: {
       id: `vendor-${product.vendor}`,
       name: product.vendor,
