@@ -42,45 +42,50 @@ export class CartService {
     variantId: string,
     quantity: number,
   ) {
-    const variant = await this.prisma.client.productVariant.findFirst({
-      where: {
-        id: variantId,
-        product: { status: ProductStatus.ACTIVE, deletedAt: null },
-      },
-      include: { product: true },
-    });
-    if (!variant) throw new NotFoundException("Product variant not found");
-    if (variant.stock < quantity) {
-      throw new BadRequestException("Insufficient stock");
-    }
-
-    const cart = await this.resolveCart(identity);
-    const existing = await this.prisma.client.cartItem.findUnique({
-      where: { cartId_variantId: { cartId: cart.id, variantId } },
-    });
-
-    if (existing) {
-      const newQty = existing.quantity + quantity;
-      if (variant.stock < newQty) {
+    try {
+      const variant = await this.prisma.client.productVariant.findFirst({
+        where: {
+          id: variantId,
+          product: { status: ProductStatus.ACTIVE, deletedAt: null },
+        },
+        include: { product: true },
+      });
+      if (!variant) throw new NotFoundException("Product variant not found");
+      if (variant.stock < quantity) {
         throw new BadRequestException("Insufficient stock");
       }
-      await this.prisma.client.cartItem.update({
-        where: { id: existing.id },
-        data: { quantity: newQty },
-      });
-    } else {
-      await this.prisma.client.cartItem.create({
-        data: {
-          id: uuidv7(),
-          cartId: cart.id,
-          productId: variant.productId,
-          variantId,
-          quantity,
-        },
-      });
-    }
 
-    return this.getCart(identity);
+      const cart = await this.resolveCart(identity);
+      const existing = await this.prisma.client.cartItem.findUnique({
+        where: { cartId_variantId: { cartId: cart.id, variantId } },
+      });
+
+      if (existing) {
+        const newQty = existing.quantity + quantity;
+        if (variant.stock < newQty) {
+          throw new BadRequestException("Insufficient stock");
+        }
+        await this.prisma.client.cartItem.update({
+          where: { id: existing.id },
+          data: { quantity: newQty },
+        });
+      } else {
+        await this.prisma.client.cartItem.create({
+          data: {
+            id: uuidv7(),
+            cartId: cart.id,
+            productId: variant.productId,
+            variantId,
+            quantity,
+          },
+        });
+      }
+
+      return this.getCart(identity);
+    } catch (error) {
+      console.error('CartService.addItem error', error);
+      throw error;
+    }
   }
 
   async updateItem(
