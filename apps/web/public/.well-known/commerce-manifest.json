@@ -1,0 +1,13 @@
+{
+  "name": "ATVOO",
+  "description": "Enterprise multi-vendor marketplace — product feed for AI agents.",
+  "feeds": {
+    "ucp": "/feeds/ucp",
+    "acp": "/feeds/acp",
+    "perplexity": "/feeds/perplexity"
+  },
+  "policies": {
+    "termsOfService": "/terms",
+    "privacyPolicy": "/privacy"
+  }
+}

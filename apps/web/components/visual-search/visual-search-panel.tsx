@@ -15,12 +15,12 @@ export function VisualSearchPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const trimmedQuery = query.trim();
-    const trimmedImageUrl = imageUrl.trim();
+  async function performSearch(imgUrl?: string, text?: string) {
+    const trimmedQuery = (text ?? query).trim();
+    const trimmedImageUrl = (imgUrl ?? imageUrl).trim();
 
     if (!trimmedQuery && !trimmedImageUrl) {
       setError("Enter an image URL or text hint to search.");
@@ -73,6 +73,48 @@ export function VisualSearchPanel() {
     }
   }
 
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await performSearch();
+  }
+
+  async function uploadFile(file: File | null) {
+    if (!file) return null;
+    setUploading(true);
+    setError(null);
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file, file.name);
+
+      const res = await fetch(`${siteConfig.apiUrl}/uploads`, {
+        method: "POST",
+        body: fd,
+      });
+
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || "Upload failed");
+      }
+
+      const json = await res.json();
+      if (json?.url) {
+        setImageUrl(json.url);
+        setPreviewUrl(json.url);
+        // auto-run search with the uploaded url
+        await performSearch(json.url, query);
+        return json.url;
+      }
+
+      throw new Error("Upload returned no URL");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div className="space-y-8">
       <section className="rounded-3xl border border-border bg-surface p-6">
@@ -99,6 +141,21 @@ export function VisualSearchPanel() {
             </label>
 
             <label className="block">
+              <span className="text-sm font-medium text-primary">Or upload an image</span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const f = e.currentTarget.files?.[0] ?? null;
+                  if (!f) return;
+                  await uploadFile(f);
+                }}
+                className="mt-2 w-full text-sm"
+              />
+              {uploading ? <p className="mt-2 text-sm text-muted">Uploading...</p> : null}
+            </label>
+
+            <label className="block">
               <span className="text-sm font-medium text-primary">Text hint</span>
               <input
                 type="text"
@@ -109,6 +166,27 @@ export function VisualSearchPanel() {
               />
             </label>
           </div>
+
+          {previewUrl ? (
+            <div className="mt-4">
+              <p className="text-sm text-muted mb-2">Preview</p>
+              <div className="max-w-xs overflow-hidden rounded-lg">
+                <img src={previewUrl} alt="upload preview" className="w-full object-cover" />
+              </div>
+              <div className="mt-2">
+                <button
+                  type="button"
+                  className="rounded-full px-3 py-1 text-sm bg-surface text-muted hover:bg-background"
+                  onClick={() => {
+                    setPreviewUrl(null);
+                    setImageUrl("");
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ) : null}
 
           {error ? (
             <p className="rounded-2xl bg-error/10 px-4 py-3 text-sm text-error">{error}</p>
