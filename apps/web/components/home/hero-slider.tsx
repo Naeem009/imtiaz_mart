@@ -3,23 +3,32 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { siteConfig } from "@/config/site";
-import type { HeroSlide } from "@/lib/data/homepage";
+import type { HomeHeroSlide } from "@/lib/home/load-home";
 
 interface HeroSliderProps {
-  slides: HeroSlide[];
+  slides: HomeHeroSlide[];
 }
 
 export function HeroSlider({ slides }: HeroSliderProps) {
   const [active, setActive] = useState(0);
+  const count = slides.length;
 
   const next = useCallback(() => {
-    setActive((i) => (i + 1) % slides.length);
-  }, [slides.length]);
+    if (count === 0) return;
+    setActive((i) => (i + 1) % count);
+  }, [count]);
 
   useEffect(() => {
+    if (count <= 1) return;
     const timer = setInterval(next, 6000);
     return () => clearInterval(timer);
-  }, [next]);
+  }, [next, count]);
+
+  useEffect(() => {
+    if (active >= count) setActive(0);
+  }, [active, count]);
+
+  if (count === 0) return null;
 
   return (
     <section
@@ -33,12 +42,22 @@ export function HeroSlider({ slides }: HeroSliderProps) {
             key={slide.id}
             role="group"
             aria-roledescription="slide"
-            aria-label={`${index + 1} of ${slides.length}`}
-            className={`absolute inset-0 bg-gradient-to-br ${slide.gradient} transition-opacity duration-700 ${
-              index === active ? "opacity-100" : "pointer-events-none opacity-0"
-            }`}
+            aria-label={`${index + 1} of ${count}`}
+            className={`absolute inset-0 transition-opacity duration-700 ${
+              slide.imageUrl ? "bg-slate-900" : `bg-gradient-to-br ${slide.gradient}`
+            } ${index === active ? "opacity-100" : "pointer-events-none opacity-0"}`}
+            style={
+              slide.imageUrl
+                ? {
+                    backgroundImage: `url(${slide.imageUrl})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }
+                : undefined
+            }
           >
-            <div className="mx-auto flex h-full max-w-7xl flex-col justify-center px-6 sm:px-10 lg:px-12">
+            {slide.imageUrl ? <div className="absolute inset-0 bg-black/45" /> : null}
+            <div className="relative mx-auto flex h-full max-w-7xl flex-col justify-center px-6 sm:px-10 lg:px-12">
               <p className="text-sm font-medium uppercase tracking-widest text-white/80">
                 {siteConfig.name}
               </p>
@@ -61,39 +80,43 @@ export function HeroSlider({ slides }: HeroSliderProps) {
         ))}
       </div>
 
-      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            type="button"
-            onClick={() => setActive(index)}
-            className={`h-2 rounded-full transition-all ${
-              index === active
-                ? "w-8 bg-white"
-                : "w-2 bg-white/50 hover:bg-white/80"
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
-            aria-current={index === active}
-          />
-        ))}
-      </div>
+      {count > 1 ? (
+        <>
+          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+            {slides.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => setActive(index)}
+                className={`h-2 rounded-full transition-all ${
+                  index === active
+                    ? "w-8 bg-white"
+                    : "w-2 bg-white/50 hover:bg-white/80"
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+                aria-current={index === active}
+              />
+            ))}
+          </div>
 
-      <button
-        type="button"
-        onClick={() => setActive((i) => (i - 1 + slides.length) % slides.length)}
-        className="absolute left-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-black/20 p-2 text-white backdrop-blur hover:bg-black/40 sm:block"
-        aria-label="Previous slide"
-      >
-        ‹
-      </button>
-      <button
-        type="button"
-        onClick={next}
-        className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-black/20 p-2 text-white backdrop-blur hover:bg-black/40 sm:block"
-        aria-label="Next slide"
-      >
-        ›
-      </button>
+          <button
+            type="button"
+            onClick={() => setActive((i) => (i - 1 + count) % count)}
+            className="absolute left-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-black/20 p-2 text-white backdrop-blur hover:bg-black/40 sm:block"
+            aria-label="Previous slide"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            onClick={next}
+            className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-black/20 p-2 text-white backdrop-blur hover:bg-black/40 sm:block"
+            aria-label="Next slide"
+          >
+            ›
+          </button>
+        </>
+      ) : null}
     </section>
   );
 }

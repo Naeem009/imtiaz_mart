@@ -5,123 +5,97 @@ import { CategorySection } from "@/components/home/category-section";
 import { FeatureStrip } from "@/components/home/feature-strip";
 import { FlashSaleSection } from "@/components/home/flash-sale-section";
 import { HeroSlider } from "@/components/home/hero-slider";
-import { InstagramSection } from "@/components/home/instagram-section";
 import { MarketplaceQuickLinks } from "@/components/home/marketplace-quick-links";
 import { NewsletterSection } from "@/components/home/newsletter-section";
 import { ProductSection } from "@/components/home/product-section";
 import { ReviewsSection } from "@/components/home/reviews-section";
 import { TrustBadges } from "@/components/home/trust-badges";
 import { VendorsSection } from "@/components/home/vendors-section";
-import { VideoReviewsSection } from "@/components/home/video-reviews-section";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
-import {
-  bestSellers,
-  blogPosts,
-  categories,
-  customerReviews,
-  featuredCategories,
-  featuredProducts,
-  featuredVendors,
-  flashSaleProducts,
-  heroSlides,
-  instagramPosts,
-  newArrivals,
-  popularBrands,
-  recommendedProducts,
-  topRated,
-  trendingProducts,
-  videoReviews,
-} from "@/lib/data/homepage";
 import { siteConfig } from "@/config/site";
+import { loadHomePage } from "@/lib/home/load-home";
 
-function getFlashSaleEnd(): string {
-  const end = new Date();
-  end.setHours(end.getHours() + 8, 0, 0, 0);
-  return end.toISOString();
-}
+export const revalidate = 60;
 
-export default function HomePage() {
-  const flashSaleEndsAt = getFlashSaleEnd();
+export const metadata = {
+  title: siteConfig.name,
+  description: siteConfig.description,
+};
+
+export default async function HomePage() {
+  const home = await loadHomePage();
 
   return (
     <div className="flex min-h-full flex-col pb-16 md:pb-0">
-      <AnnouncementBar />
+      <AnnouncementBar text={home.announcement.text} href={home.announcement.href} />
       <SiteHeader />
 
       <main>
-        <HeroSlider slides={heroSlides} />
+        <HeroSlider slides={home.slides} />
         <FeatureStrip />
         <MarketplaceQuickLinks />
 
         <CategorySection
           title="Featured Categories"
           subtitle="Browse by department"
-          categories={featuredCategories}
+          categories={home.featuredCategories}
         />
 
         <CategorySection
           title="Shop by Category"
-          categories={categories}
+          categories={home.categories}
           variant="grid"
         />
 
-        <FlashSaleSection
-          products={flashSaleProducts}
-          endsAt={flashSaleEndsAt}
-        />
+        <FlashSaleSection products={home.flashSale} endsAt={home.flashSaleEndsAt} />
 
         <ProductSection
           title="Featured Products"
           subtitle="Hand-picked by our team"
-          products={featuredProducts}
+          products={home.featured}
         />
 
         <ProductSection
           title="Trending Now"
           subtitle="Popular this week"
-          products={trendingProducts}
+          products={home.trending}
           href="/shop?sort=trending"
         />
 
         <ProductSection
           title="Best Sellers"
-          products={bestSellers}
-          href="/shop?sort=bestsellers"
+          products={home.bestsellers}
+          href="/shop?sort=bestseller"
         />
 
         <ProductSection
           title="New Arrivals"
           subtitle="Fresh listings from vendors"
-          products={newArrivals}
-          href="/shop?sort=new"
+          products={home.newArrivals}
+          href="/shop?sort=newest"
         />
 
         <ProductSection
           title="Top Rated"
           subtitle="Highest rated by customers"
-          products={topRated}
+          products={home.topRated}
           href="/shop?sort=rating"
         />
 
         <ProductSection
           title="Recommended for You"
           subtitle="Based on trending purchases"
-          products={recommendedProducts}
-          href="/shop?sort=recommended"
+          products={home.recommended}
         />
 
-        <VendorsSection vendors={featuredVendors} />
+        <VendorsSection vendors={home.vendors} />
 
-        <BrandsSection brands={popularBrands} />
+        <BrandsSection brands={home.brands} />
 
-        <ReviewsSection reviews={customerReviews} />
+        <ReviewsSection reviews={home.reviews} />
 
-        <VideoReviewsSection videos={videoReviews} />
-
-        <InstagramSection posts={instagramPosts} />
-
-        <BlogSection posts={blogPosts} />
+        <BlogSection posts={home.posts} />
 
         <NewsletterSection />
 
@@ -132,8 +106,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-export const metadata = {
-  title: siteConfig.name,
-  description: siteConfig.description,
-};

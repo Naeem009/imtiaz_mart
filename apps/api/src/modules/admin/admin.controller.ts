@@ -7,7 +7,10 @@ import { CatalogSearchService } from "@/modules/search/catalog-search.service";
 import { PaymentsService } from "@/modules/payments/payments.service";
 import { ReturnsService } from "@/modules/returns/returns.service";
 import { AdminService } from "./admin.service";
+import { UpdateAdminCustomerDto } from "./dto/update-admin-customer.dto";
+import { UpdateAdminProductDto } from "./dto/update-admin-product.dto";
 import { UpdateEligibilityDto } from "./dto/update-eligibility.dto";
+import { UpdatePlatformSettingsDto } from "./dto/update-platform-settings.dto";
 import { UpdateVendorStatusDto } from "./dto/update-vendor-status.dto";
 
 @ApiTags("admin")
@@ -45,6 +48,53 @@ export class AdminController {
   @ApiOperation({ summary: "List all marketplace orders" })
   orders(@Query("page") page?: string) {
     return this.admin.listOrders(Math.max(1, parseInt(page ?? "1", 10) || 1));
+  }
+
+  @Get("products")
+  @ApiOperation({ summary: "List marketplace products" })
+  products(
+    @Query("page") page?: string,
+    @Query("q") q?: string,
+    @Query("status") status?: string,
+  ) {
+    return this.admin.listProducts({
+      page: Math.max(1, parseInt(page ?? "1", 10) || 1),
+      q,
+      status,
+    });
+  }
+
+  @Patch("products/:id")
+  @ApiOperation({ summary: "Update product status or agent eligibility" })
+  updateProduct(@Param("id") id: string, @Body() dto: UpdateAdminProductDto) {
+    return this.admin.updateProduct(id, dto);
+  }
+
+  @Get("customers")
+  @ApiOperation({ summary: "List marketplace customers" })
+  customers(@Query("page") page?: string, @Query("q") q?: string) {
+    return this.admin.listCustomers({
+      page: Math.max(1, parseInt(page ?? "1", 10) || 1),
+      q,
+    });
+  }
+
+  @Patch("customers/:id")
+  @ApiOperation({ summary: "Activate or deactivate a customer account" })
+  updateCustomer(@Param("id") id: string, @Body() dto: UpdateAdminCustomerDto) {
+    return this.admin.updateCustomer(id, dto);
+  }
+
+  @Get("settings")
+  @ApiOperation({ summary: "Get marketplace settings" })
+  getSettings() {
+    return this.admin.getSettings();
+  }
+
+  @Patch("settings")
+  @ApiOperation({ summary: "Update marketplace settings" })
+  updateSettings(@Body() dto: UpdatePlatformSettingsDto) {
+    return this.admin.updateSettings(dto);
   }
 
   @Get("agent-commerce/eligibility")

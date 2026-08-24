@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ShopShell } from "@/components/layout/shop-shell";
 import { fetchCategories } from "@/lib/catalog/fetch";
+import { isHttpUrl, surfaceFromSlug } from "@/lib/home/palette";
 
 export const metadata = {
   title: "Categories",
@@ -15,16 +16,33 @@ export default async function CategoriesPage() {
         <h1 className="text-3xl font-bold text-primary">Categories</h1>
         <p className="mt-2 text-muted">Browse by department</p>
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {categories.map((cat) => (
+          {categories.map((cat) => {
+            const image = cat.imageUrl?.trim() ?? "";
+            const remote = isHttpUrl(image);
+            const surface =
+              image.startsWith("bg-") || image.startsWith("from-")
+                ? image
+                : surfaceFromSlug(cat.slug);
+
+            return (
             <Link
               key={cat.id}
               href={`/categories/${cat.slug}`}
               className="group flex flex-col items-center rounded-xl border border-border bg-surface p-6 transition-shadow hover:shadow-md"
             >
               <div
-                className={`flex h-20 w-20 items-center justify-center rounded-full text-3xl font-bold text-primary/40 ${cat.imageUrl ?? "bg-slate-100"}`}
+                className={`flex h-20 w-20 items-center justify-center overflow-hidden rounded-full text-3xl font-bold text-primary/40 ${remote ? "bg-slate-100" : surface}`}
+                style={
+                  remote
+                    ? {
+                        backgroundImage: `url(${image})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }
+                    : undefined
+                }
               >
-                {cat.name.charAt(0)}
+                {remote ? null : cat.name.charAt(0)}
               </div>
               <h2 className="mt-4 font-semibold text-primary group-hover:text-accent">
                 {cat.name}
@@ -33,7 +51,8 @@ export default async function CategoriesPage() {
                 {cat.productCount} products
               </p>
             </Link>
-          ))}
+            );
+          })}
         </div>
       </div>
     </ShopShell>

@@ -1,4 +1,4 @@
-import { trustBadges } from "@/lib/data/homepage";
+import { trustBadges } from "@/lib/home/chrome";
 
 const icons: Record<string, string> = {
   lock: "🔒",

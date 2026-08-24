@@ -8,7 +8,7 @@ const footerLinks = {
     { label: "Categories", href: "/categories" },
     { label: "Brands", href: "/brands" },
     { label: "Deals", href: "/deals" },
-    { label: "Flash Sale", href: "/deals/flash-sale" },
+    { label: "Flash Sale", href: "/deals" },
   ],
   company: [
     { label: "About Us", href: "/about" },
@@ -82,7 +82,7 @@ function FooterColumn({
       </h3>
       <ul className="mt-4 space-y-2">
         {links.map((link) => (
-          <li key={link.href}>
+          <li key={link.label}>
             <Link
               href={link.href}
               className="text-sm text-white/70 transition-colors hover:text-white"

@@ -1,15 +1,15 @@
 import Link from "next/link";
-import type { HomeProduct } from "@/lib/data/homepage";
-import { mapHomeProductToListItem } from "@/lib/catalog/map-home-product";
+import type { ProductListItem } from "@imtiaz-mart/shared";
 import { ProductCard } from "@/components/ui/product-card";
 import { FlashSaleTimer } from "./flash-sale-timer";
 
 interface FlashSaleSectionProps {
-  products: HomeProduct[];
+  products: ProductListItem[];
   endsAt: string;
 }
 
 export function FlashSaleSection({ products, endsAt }: FlashSaleSectionProps) {
+  if (products.length === 0) return null;
 
   return (
     <section className="bg-gradient-to-r from-orange-500 to-red-600 py-10 sm:py-14">
@@ -26,13 +26,13 @@ export function FlashSaleSection({ products, endsAt }: FlashSaleSectionProps) {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {products.slice(0, 4).map((product) => (
             <div key={product.id} className="rounded-xl bg-white p-3 shadow-lg">
-              <ProductCard product={mapHomeProductToListItem(product)} />
+              <ProductCard product={product} />
             </div>
           ))}
         </div>
         <div className="mt-6 text-center">
           <Link
-            href="/deals/flash-sale"
+            href="/deals"
             className="inline-flex h-11 items-center rounded-lg bg-white px-8 text-sm font-semibold text-cta transition-opacity hover:opacity-90"
           >
             View all flash deals

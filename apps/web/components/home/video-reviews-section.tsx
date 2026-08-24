@@ -1,11 +1,20 @@
-import type { HomeVideoReview } from "@/lib/data/homepage";
 import { SectionHeader } from "@/components/ui/section-header";
+
+interface HomeVideoReview {
+  id: string;
+  title: string;
+  author: string;
+  duration: string;
+  gradient: string;
+}
 
 interface VideoReviewsSectionProps {
   videos: HomeVideoReview[];
 }
 
 export function VideoReviewsSection({ videos }: VideoReviewsSectionProps) {
+  if (videos.length === 0) return null;
+
   return (
     <section className="bg-surface py-10 sm:py-14">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

@@ -1,11 +1,13 @@
-import type { HomeReview } from "@/lib/data/homepage";
+import type { HomeReviewCard } from "@/lib/home/load-home";
 import { SectionHeader } from "@/components/ui/section-header";
 
 interface ReviewsSectionProps {
-  reviews: HomeReview[];
+  reviews: HomeReviewCard[];
 }
 
 export function ReviewsSection({ reviews }: ReviewsSectionProps) {
+  if (reviews.length === 0) return null;
+
   return (
     <section className="py-10 sm:py-14">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

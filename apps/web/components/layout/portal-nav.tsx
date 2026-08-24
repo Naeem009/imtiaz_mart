@@ -40,12 +40,15 @@ export const vendorNav = [
 export const adminNav = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/vendors", label: "Vendors" },
+  { href: "/admin/customers", label: "Customers" },
+  { href: "/admin/products", label: "Products" },
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/analytics", label: "Analytics" },
   { href: "/admin/agent-commerce", label: "Agent feeds" },
   { href: "/admin/payments", label: "Payments" },
   { href: "/admin/returns", label: "Returns" },
   { href: "/admin/cms", label: "CMS" },
+  { href: "/admin/settings", label: "Settings" },
   { href: "/admin/visual-search", label: "Visual search" },
   { href: "/admin/social-automation", label: "Social" },
 ];

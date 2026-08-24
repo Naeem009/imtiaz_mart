@@ -93,20 +93,78 @@ export async function seedCms(prisma: PrismaClient) {
     }
   }
 
-  const existingPost = await prisma.blogPost.findUnique({ where: { slug: "welcome-to-atvoo" } });
-  if (!existingPost) {
-    await prisma.blogPost.create({
-      data: {
+  const posts = [
+    {
+      slug: "welcome-to-atvoo",
+      title: "Welcome to ATVOO",
+      excerpt: "A premium marketplace built for trusted local commerce.",
+      body: "ATVOO brings vendors and shoppers together with verified stores, visual search, and agent-ready product feeds.",
+    },
+    {
+      slug: "how-to-shop-with-verified-vendors",
+      title: "How to shop with verified vendors",
+      excerpt: "Look for ratings, delivery windows, and return policies before you buy.",
+      body: "Verified vendors on ATVOO are reviewed by marketplace ops. Check store ratings, product eligibility, and return windows before checkout.",
+    },
+    {
+      slug: "reward-points-and-affiliates",
+      title: "Earn more with rewards and referrals",
+      excerpt: "Points cover up to 20% of an order. Affiliates earn 5% on referred sales.",
+      body: "Customers earn 1 point per PKR 100 paid. Share your affiliate link from the Affiliate page to earn commission on attributed orders.",
+    },
+  ];
+
+  for (const post of posts) {
+    await prisma.blogPost.upsert({
+      where: { slug: post.slug },
+      update: post,
+      create: {
         id: uuidv7(),
-        title: "Welcome to ATVOO",
-        slug: "welcome-to-atvoo",
-        excerpt: "A premium marketplace built for trusted local commerce.",
-        body: "ATVOO brings vendors and shoppers together with verified stores, visual search, and agent-ready product feeds.",
+        ...post,
         published: true,
         publishedAt: new Date(),
       },
     });
   }
 
-  console.log("Seeded CMS pages, FAQs, and blog");
+  const existingBanners = await prisma.banner.count();
+  if (existingBanners === 0) {
+    const banners = [
+      {
+        title: "Summer collection from trusted vendors",
+        imageUrl: "from-slate-900 via-blue-900 to-slate-800",
+        href: "/shop",
+        placement: "home",
+        sortOrder: 0,
+      },
+      {
+        title: "Limited-time deals on bestsellers",
+        imageUrl: "from-orange-600 via-red-600 to-rose-700",
+        href: "/deals",
+        placement: "home",
+        sortOrder: 1,
+      },
+      {
+        title: "Discover verified local brands",
+        imageUrl: "from-emerald-800 via-teal-800 to-slate-900",
+        href: "/vendors",
+        placement: "home",
+        sortOrder: 2,
+      },
+      {
+        title: "Free shipping on orders over Rs. 2,999",
+        imageUrl: "announcement",
+        href: "/deals",
+        placement: "announcement",
+        sortOrder: 0,
+      },
+    ];
+    for (const banner of banners) {
+      await prisma.banner.create({
+        data: { id: uuidv7(), ...banner, active: true },
+      });
+    }
+  }
+
+  console.log("Seeded CMS pages, FAQs, blog, and banners");
 }

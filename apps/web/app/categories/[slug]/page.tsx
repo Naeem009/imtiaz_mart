@@ -5,7 +5,6 @@ import { ShopToolbar } from "@/components/shop/shop-toolbar";
 import { ShopShell } from "@/components/layout/shop-shell";
 import { getCategory } from "@/lib/api/catalog";
 import { fetchCategoryProducts } from "@/lib/catalog/fetch";
-import { getMockCategories } from "@/lib/catalog/fallback";
 
 export async function generateMetadata({
   params,
@@ -13,9 +12,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const cat =
-    (await getCategory(slug)) ??
-    getMockCategories().find((c) => c.slug === slug);
+  const cat = await getCategory(slug);
   return { title: cat?.name ?? "Category" };
 }
 
@@ -31,10 +28,7 @@ export default async function CategoryPage({
   const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
   const sort = sp.sort ?? "newest";
 
-  const category =
-    (await getCategory(slug)) ??
-    getMockCategories().find((c) => c.slug === slug);
-
+  const category = await getCategory(slug);
   if (!category) notFound();
 
   const result = await fetchCategoryProducts(slug, { page, limit: 20, sort });

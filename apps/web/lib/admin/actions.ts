@@ -112,3 +112,50 @@ export async function upsertCmsPageAction(formData: FormData) {
   revalidatePath("/pages");
   redirect("/admin/cms");
 }
+
+export async function updateAdminProductAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const result = await authMutateJson(`/admin/products/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      status: String(formData.get("status") ?? "ACTIVE"),
+      isEligibleSearch: formData.get("isEligibleSearch") === "on",
+      isEligibleCheckout: formData.get("isEligibleCheckout") === "on",
+    }),
+  });
+  if ("error" in result) fail("/admin/products", result.error);
+  revalidatePath("/admin/products");
+  revalidatePath("/shop");
+  redirect("/admin/products");
+}
+
+export async function updateAdminCustomerAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const result = await authMutateJson(`/admin/customers/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      isActive: formData.get("isActive") === "true",
+    }),
+  });
+  if ("error" in result) fail("/admin/customers", result.error);
+  revalidatePath("/admin/customers");
+  redirect("/admin/customers");
+}
+
+export async function updatePlatformSettingsAction(formData: FormData) {
+  const result = await authMutateJson("/admin/settings", {
+    method: "PATCH",
+    body: JSON.stringify({
+      storeName: String(formData.get("storeName") ?? ""),
+      supportEmail: String(formData.get("supportEmail") ?? ""),
+      freeShippingThreshold: Number(formData.get("freeShippingThreshold") ?? 0),
+      shippingFee: Number(formData.get("shippingFee") ?? 0),
+      platformFeeRate: Number(formData.get("platformFeeRate") ?? 0),
+      announcementText: String(formData.get("announcementText") ?? ""),
+      announcementHref: String(formData.get("announcementHref") ?? ""),
+    }),
+  });
+  if ("error" in result) fail("/admin/settings", result.error);
+  revalidatePath("/admin/settings");
+  redirect("/admin/settings");
+}

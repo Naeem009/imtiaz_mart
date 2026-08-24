@@ -30,12 +30,15 @@ export type {
   WishlistItemDto,
 } from "./types/commerce";
 export type {
+  AdminCustomerDto,
   AdminOrderDto,
+  AdminProductDto,
   AdminStatsDto,
   AdminVendorDto,
   AgentEligibilityProductDto,
   AgentFeedStatusDto,
   AdminSocialOverviewDto,
+  PlatformSettingsDto,
   PublicVendorDto,
   SocialAccountDto,
   SocialAnalyticsDto,

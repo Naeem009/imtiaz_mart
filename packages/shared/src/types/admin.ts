@@ -126,3 +126,37 @@ export interface AdminSocialOverviewDto {
     createdAt: string;
   }>;
 }
+
+export interface AdminProductDto {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  price: number;
+  stock: number;
+  vendorName: string;
+  categoryName: string;
+  isEligibleSearch: boolean;
+  isEligibleCheckout: boolean;
+  createdAt: string;
+}
+
+export interface AdminCustomerDto {
+  id: string;
+  email: string;
+  name: string;
+  roles: string[];
+  isActive: boolean;
+  orderCount: number;
+  createdAt: string;
+}
+
+export interface PlatformSettingsDto {
+  storeName: string;
+  supportEmail: string;
+  freeShippingThreshold: number;
+  shippingFee: number;
+  platformFeeRate: number;
+  announcementText: string;
+  announcementHref: string;
+}

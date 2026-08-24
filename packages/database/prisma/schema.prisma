@@ -622,7 +622,7 @@ model SocialPostQueue {
   ruleId      String?          @map("rule_id")
   status      SocialPostStatus @default(PENDING)
   payload     Json
-  scheduledAt DateTime?
+  scheduledAt DateTime?      @map("scheduled_at")
   attempts    Int              @default(0)
   createdAt   DateTime         @default(now()) @map("created_at")
 
@@ -643,7 +643,7 @@ model SocialPost {
   platform       String
   platformPostId String?
   status         SocialPostStatus @default(SENT)
-  publishedAt    DateTime?
+  publishedAt    DateTime?        @map("published_at")
   response       Json?
   createdAt      DateTime         @default(now()) @map("created_at")
 
@@ -680,7 +680,7 @@ model VendorSubscription {
   id        String           @id @default(uuid())
   vendorId  String           @map("vendor_id")
   tier      SubscriptionTier
-  expiresAt DateTime?
+  expiresAt DateTime?        @map("expires_at")
   createdAt DateTime         @default(now()) @map("created_at")
 
   vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
@@ -946,4 +946,13 @@ model MenuItem {
 
   @@index([menuId])
   @@map("menu_items")
+}
+
+model PlatformSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("platform_settings")
 }

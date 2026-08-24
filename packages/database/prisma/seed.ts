@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { v7 as uuidv7 } from "uuid";
 import { seedCatalog } from "./seed-catalog";
 import { seedCms } from "./seed-cms";
 
@@ -158,6 +159,27 @@ async function ensureDemoAffiliate() {
   });
 }
 
+async function seedPlatformSettings() {
+  const settings: Array<[string, string]> = [
+    ["store_name", "ATVOO"],
+    ["support_email", "support@example.com"],
+    ["free_shipping_threshold", "2999"],
+    ["shipping_fee", "250"],
+    ["platform_fee_rate", "0.1"],
+    ["announcement_text", "Free shipping on orders over Rs. 2,999"],
+    ["announcement_href", "/deals"],
+  ];
+
+  for (const [key, value] of settings) {
+    await prisma.platformSetting.upsert({
+      where: { key },
+      update: {},
+      create: { id: uuidv7(), key, value },
+    });
+  }
+  console.log("Seeded platform settings");
+}
+
 async function main() {
   for (const role of ROLES) {
     await prisma.role.upsert({
@@ -171,6 +193,7 @@ async function main() {
   await ensureDemoAffiliate();
   await seedCatalog();
   await seedCms(prisma);
+  await seedPlatformSettings();
 }
 
 main()
