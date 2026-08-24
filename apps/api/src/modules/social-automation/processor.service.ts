@@ -1,12 +1,16 @@
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { QueueService } from "./queue.service";
 import { PrismaService } from "@/modules/prisma/prisma.service";
+import { getAdapter } from "./adapters";
 
 @Injectable()
 export class ProcessorService implements OnModuleInit {
   private logger = new Logger(ProcessorService.name);
 
-  constructor(private queue: QueueService, private prisma: PrismaService) {}
+  constructor(
+    private queue: QueueService,
+    private prisma: PrismaService,
+  ) {}
 
   onModuleInit() {
     this.queue.onProcess(async (job) => {
@@ -14,70 +18,111 @@ export class ProcessorService implements OnModuleInit {
     });
   }
 
-  async handleJob(data: { queueId: string; vendorId: string; ruleId?: string; payload?: any }) {
+  async handleJob(data: {
+    queueId: string;
+    vendorId: string;
+    ruleId?: string;
+    payload?: Record<string, unknown>;
+  }) {
     const { queueId, vendorId, ruleId } = data;
     this.logger.log(`Processing social job ${queueId} vendor=${vendorId} rule=${ruleId}`);
 
-    // Mark queued record as processing
     try {
-      await (this.prisma.client as any).socialPostQueue.update({ where: { id: queueId }, data: { status: "SCHEDULED" } });
-    } catch (err) {
+      await this.prisma.client.socialPostQueue.update({
+        where: { id: queueId },
+        data: { status: "SCHEDULED" },
+      });
+    } catch (err: unknown) {
       this.logger.warn(`Failed to mark queue ${queueId} scheduled: ${String(err)}`);
     }
 
-    // Simple placeholder: generate a caption, run moderation, publish to platforms
     try {
-      // Load rule to determine platforms
-      const rule = await (this.prisma.client as any).socialAutomationRule.findUnique({ where: { id: ruleId } });
+      const rule = ruleId
+        ? await this.prisma.client.socialAutomationRule.findUnique({ where: { id: ruleId } })
+        : null;
       const vendor = await this.prisma.client.vendor.findUnique({ where: { id: vendorId } });
+      const platforms = rule?.platforms?.length ? rule.platforms : ["facebook"];
+      const caption = `Check out new items from ${vendor?.name ?? "our store"} on ATVOO!`;
 
-      const platforms = rule?.platforms ?? ["facebook"];
-
-      // Build a simple payload — in real system, call AI content generation
-      const caption = `Check out new items from ${vendor?.name ?? "our store"}!`;
-
-      // Simple moderation: reject if caption contains a banned word
       const banned = ["spam", "banned"];
-      const lower = caption.toLowerCase();
-      const blocked = banned.some((w) => lower.includes(w));
+      const blocked = banned.some((word) => caption.toLowerCase().includes(word));
       if (blocked) {
-        await (this.prisma.client as any).socialContentModerationLog.create({ data: { queueId, verdict: "REJECT", reason: "Contains banned terms" } });
-        await (this.prisma.client as any).socialPostQueue.update({ where: { id: queueId }, data: { status: "FAILED" } });
-        this.logger.warn(`Job ${queueId} blocked by moderation`);
+        await this.prisma.client.socialContentModerationLog.create({
+          data: { queueId, verdict: "REJECT", reason: "Contains banned terms" },
+        });
+        await this.prisma.client.socialPostQueue.update({
+          where: { id: queueId },
+          data: { status: "FAILED" },
+        });
         return;
       }
 
-      // Publish per platform using adapters
+      await this.prisma.client.socialContentModerationLog.create({
+        data: { queueId, verdict: "ALLOW", reason: "Passed brand-safety screen" },
+      });
+
       for (const platform of platforms) {
         try {
-          this.logger.log(`Publishing to ${platform} — ${caption}`);
-          const { getAdapter } = require("./adapters");
           const Adapter = getAdapter(platform);
-          let result: any = null;
+          let result: { platformPostId: string | null; response: unknown } = {
+            platformPostId: null,
+            response: { skipped: true },
+          };
           if (Adapter) {
-            // find vendor account for this platform
-            const account = await (this.prisma.client as any).vendorSocialAccount.findFirst({ where: { vendorId, provider: platform, isActive: true } });
-            const adapter = new Adapter(this.prisma.client);
-            result = await adapter.publish(account, { productId: data.payload?.productId, productUrl: data.payload?.productUrl, imageUrl: data.payload?.imageUrl, title: caption });
-          } else {
-            // no adapter, record as skipped
-            result = { platformPostId: null, response: { skipped: true } };
+            const account = await this.prisma.client.vendorSocialAccount.findFirst({
+              where: { vendorId, provider: platform, isActive: true },
+            });
+            if (!account) {
+              result = {
+                platformPostId: null,
+                response: { skipped: true, reason: "No connected account" },
+              };
+            } else {
+              const adapter = new Adapter(this.prisma.client);
+              const payload = data.payload ?? {};
+              result = await adapter.publish(account, {
+                productId: typeof payload.productId === "string" ? payload.productId : "",
+                productUrl: typeof payload.productUrl === "string" ? payload.productUrl : undefined,
+                imageUrl: typeof payload.imageUrl === "string" ? payload.imageUrl : undefined,
+                title: caption,
+              });
+            }
           }
-
-          // Record a SocialPost row
-          await (this.prisma.client as any).socialPost.create({ data: { vendorId, queueId, platform, status: "SENT", response: result.response, platformPostId: result.platformPostId } });
-        } catch (err) {
+          await this.prisma.client.socialPost.create({
+            data: {
+              vendorId,
+              queueId,
+              platform,
+              status: "SENT",
+              publishedAt: new Date(),
+              response: result.response as object,
+              platformPostId: result.platformPostId,
+            },
+          });
+        } catch (err: unknown) {
           this.logger.error(`Failed publish to ${platform}: ${String(err)}`);
-          await (this.prisma.client as any).socialPost.create({ data: { vendorId, queueId, platform, status: "FAILED", response: { error: String(err) } } });
+          await this.prisma.client.socialPost.create({
+            data: {
+              vendorId,
+              queueId,
+              platform,
+              status: "FAILED",
+              response: { error: String(err) },
+            },
+          });
         }
       }
 
-      await (this.prisma.client as any).socialPostQueue.update({ where: { id: queueId }, data: { status: "SENT" } });
-    } catch (err) {
+      await this.prisma.client.socialPostQueue.update({
+        where: { id: queueId },
+        data: { status: "SENT" },
+      });
+    } catch (err: unknown) {
       this.logger.error(`Processor error for ${queueId}: ${String(err)}`);
-      try {
-        await (this.prisma.client as any).socialPostQueue.update({ where: { id: queueId }, data: { status: "FAILED" } });
-      } catch {}
+      await this.prisma.client.socialPostQueue.update({
+        where: { id: queueId },
+        data: { status: "FAILED" },
+      }).catch(() => undefined);
     }
   }
 }

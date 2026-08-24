@@ -4,8 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { ProductStatus } from "@imtiaz-mart/database";
-import type { VendorProfileDto } from "@imtiaz-mart/shared";
+import { ProductStatus, SubscriptionTier } from "@imtiaz-mart/database";
+import type { PublicVendorDto, VendorAnalyticsDto, VendorProfileDto } from "@imtiaz-mart/shared";
 import { v7 as uuidv7 } from "uuid";
 import { PrismaService } from "@/modules/prisma/prisma.service";
 
@@ -94,7 +94,7 @@ export class VendorsService {
     }
 
     await this.prisma.client.$transaction(async (tx) => {
-      await tx.vendor.create({
+      const created = await tx.vendor.create({
         data: {
           id: uuidv7(),
           ownerId: userId,
@@ -103,6 +103,14 @@ export class VendorsService {
           description: data.description,
           isVerified: false,
           isActive: true,
+        },
+      });
+
+      await tx.vendorSubscription.create({
+        data: {
+          id: uuidv7(),
+          vendorId: created.id,
+          tier: SubscriptionTier.STARTER,
         },
       });
 
@@ -151,9 +159,23 @@ export class VendorsService {
             },
           },
         },
+        products: {
+          where: { status: ProductStatus.ACTIVE, deletedAt: null },
+          include: {
+            category: true,
+            brand: true,
+            vendor: true,
+            images: { orderBy: { sortOrder: "asc" } },
+            variants: true,
+          },
+          orderBy: { createdAt: "desc" },
+          take: 24,
+        },
       },
     });
     if (!vendor) throw new NotFoundException("Vendor not found");
+
+    const { mapProductListItem } = await import("@/modules/catalog/catalog.mapper");
 
     return {
       id: vendor.id,
@@ -164,6 +186,63 @@ export class VendorsService {
       rating: Number(vendor.rating),
       isVerified: vendor.isVerified,
       productCount: vendor._count.products,
+      products: vendor.products.map(mapProductListItem),
     };
+  }
+
+  async listPublic(): Promise<PublicVendorDto[]> {
+    const vendors = await this.prisma.client.vendor.findMany({
+      where: { isActive: true, deletedAt: null },
+      include: {
+        _count: {
+          select: {
+            products: {
+              where: { status: ProductStatus.ACTIVE, deletedAt: null },
+            },
+          },
+        },
+      },
+      orderBy: [{ isVerified: "desc" }, { rating: "desc" }],
+    });
+
+    return vendors.map((vendor) => ({
+      id: vendor.id,
+      name: vendor.name,
+      slug: vendor.slug,
+      description: vendor.description,
+      logoUrl: vendor.logoUrl,
+      rating: Number(vendor.rating),
+      isVerified: vendor.isVerified,
+      productCount: vendor._count.products,
+    }));
+  }
+
+  async getAnalytics(userId: string): Promise<VendorAnalyticsDto> {
+    const vendor = await this.resolveVendorForUser(userId);
+    const [products, activeProducts, orders, revenue, pendingOrders] = await Promise.all([
+      this.prisma.client.product.count({ where: { vendorId: vendor.id, deletedAt: null } }),
+      this.prisma.client.product.count({
+        where: { vendorId: vendor.id, deletedAt: null, status: ProductStatus.ACTIVE },
+      }),
+      this.prisma.client.orderItem.count({ where: { vendorId: vendor.id } }),
+      this.prisma.client.orderItem
+        .aggregate({ where: { vendorId: vendor.id }, _sum: { total: true } })
+        .then((result) => Number(result._sum.total ?? 0)),
+      this.prisma.client.order.count({
+        where: {
+          status: { in: ["PENDING", "CONFIRMED", "PROCESSING"] },
+          items: { some: { vendorId: vendor.id } },
+        },
+      }),
+    ]);
+
+    return { products, activeProducts, orders, revenue, pendingOrders };
+  }
+
+  async getSubscriptionTier(vendorId: string) {
+    const sub = await this.prisma.client.vendorSubscription.findUnique({
+      where: { vendorId },
+    });
+    return sub?.tier ?? SubscriptionTier.STARTER;
   }
 }

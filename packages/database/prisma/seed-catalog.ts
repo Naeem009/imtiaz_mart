@@ -187,6 +187,8 @@ export async function seedCatalog() {
         reviewCount: p.reviewCount,
         badge: p.badge,
         status: ProductStatus.ACTIVE,
+        isEligibleSearch: true,
+        isEligibleCheckout: true,
       },
       create: {
         id: uuidv7(),
@@ -200,6 +202,8 @@ export async function seedCatalog() {
         reviewCount: p.reviewCount,
         badge: p.badge,
         status: ProductStatus.ACTIVE,
+        isEligibleSearch: true,
+        isEligibleCheckout: true,
         categoryId,
         brandId,
         vendorId,

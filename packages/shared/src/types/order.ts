@@ -24,4 +24,8 @@ export interface OrderDto {
   shippingCountry: string;
   createdAt: string;
   items: OrderItemDto[];
+  paymentMethod?: string;
+  paymentStatus?: string;
+  pointsEarned?: number;
+  pointsRedeemed?: number;
 }

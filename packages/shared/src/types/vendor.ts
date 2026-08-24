@@ -41,5 +41,8 @@ export interface VendorProductDto {
   rating: number;
   reviewCount: number;
   categoryName: string;
+  categoryId: string;
   primaryImage: string | null;
+  isEligibleSearch: boolean;
+  isEligibleCheckout: boolean;
 }

@@ -1,12 +1,16 @@
+import { FacebookAdapter } from "./facebook.adapter";
+import { TikTokAdapter } from "./tiktok.adapter";
+
 export * from "./facebook.adapter";
+export * from "./tiktok.adapter";
 
 export function getAdapter(platform: string) {
   switch ((platform || "").toLowerCase()) {
     case "facebook":
     case "instagram":
-      return require("./facebook.adapter").FacebookAdapter;
+      return FacebookAdapter;
     case "tiktok":
-      return require("./tiktok.adapter").TikTokAdapter;
+      return TikTokAdapter;
     default:
       return null;
   }

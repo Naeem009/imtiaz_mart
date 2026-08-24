@@ -7,14 +7,15 @@
   "scripts": {
     "build": "tsc",
     "generate": "prisma generate",
-    "migrate:dev": "prisma migrate dev",
-    "migrate:deploy": "prisma migrate deploy",
-    "studio": "prisma studio",
-    "db:push": "prisma db push",
-    "seed": "tsx prisma/seed.ts"
+    "migrate:dev": "prisma migrate dev --schema prisma/schema.prisma",
+    "migrate:deploy": "prisma migrate deploy --schema prisma/schema.prisma",
+    "migrate:status": "prisma migrate status --schema prisma/schema.prisma",
+    "studio": "prisma studio --schema prisma/schema.prisma",
+    "db:push": "prisma db push --schema prisma/schema.prisma",
+    "seed": "tsx --env-file=../../.env prisma/seed.ts"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx --env-file=../../.env prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",

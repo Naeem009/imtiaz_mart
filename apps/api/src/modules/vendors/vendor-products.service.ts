@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { ProductStatus } from "@imtiaz-mart/database";
+import type { VendorProductDto } from "@imtiaz-mart/shared";
 import { v7 as uuidv7 } from "uuid";
 import { PrismaService } from "@/modules/prisma/prisma.service";
+import { VendorsService } from "./vendors.service";
 import { CreateVendorProductDto } from "./dto/create-vendor-product.dto";
 import { UpdateVendorProductDto } from "./dto/update-vendor-product.dto";
+import { CatalogSearchService } from "@/modules/search/catalog-search.service";
+import { RedisService } from "@/modules/redis/redis.module";
 
 function slugify(text: string): string {
   return text
@@ -14,30 +18,42 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+function toNumber(value: { toNumber?: () => number } | number): number {
+  return typeof value === "number" ? value : Number(value.toNumber?.() ?? value);
+}
+
 @Injectable()
 export class VendorProductsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private vendors: VendorsService,
+    private search: CatalogSearchService,
+    private redis: RedisService,
+  ) {}
 
-  async list(userId: string) {
-    const vendor = await this.getVendor(userId);
-
-    return this.prisma.client.product.findMany({
+  async list(userId: string): Promise<VendorProductDto[]> {
+    const vendor = await this.vendors.resolveVendorForUser(userId);
+    const products = await this.prisma.client.product.findMany({
       where: { vendorId: vendor.id, deletedAt: null },
       include: {
-        images: { orderBy: { id: "asc" } },
+        category: true,
+        images: { orderBy: { sortOrder: "asc" } },
         variants: true,
       },
       orderBy: { createdAt: "desc" },
     });
+    return products.map((product) => this.mapProduct(product));
   }
 
-  async create(userId: string, dto: CreateVendorProductDto) {
-    const vendor = await this.getVendor(userId);
+  async create(userId: string, dto: CreateVendorProductDto): Promise<VendorProductDto> {
+    const vendor = await this.vendors.resolveVendorForUser(userId);
     const slug = `${slugify(dto.name)}-${Date.now().toString(36)}`;
+    const productId = uuidv7();
+    const stock = dto.stock ?? 50;
 
-    return this.prisma.client.product.create({
+    const product = await this.prisma.client.product.create({
       data: {
-        id: uuidv7(),
+        id: productId,
         name: dto.name,
         slug,
         price: dto.price,
@@ -49,21 +65,55 @@ export class VendorProductsService {
         status: dto.status ?? ProductStatus.DRAFT,
         isEligibleSearch: dto.isEligibleSearch ?? true,
         isEligibleCheckout: dto.isEligibleCheckout ?? false,
+        variants: {
+          create: {
+            id: uuidv7(),
+            name: "Default",
+            price: dto.price,
+            compareAtPrice: dto.compareAtPrice,
+            stock,
+          },
+        },
+        images: dto.imageUrl
+          ? {
+              create: {
+                id: uuidv7(),
+                url: dto.imageUrl,
+                alt: dto.name,
+                isPrimary: true,
+                sortOrder: 0,
+              },
+            }
+          : undefined,
+      },
+      include: {
+        category: true,
+        images: true,
+        variants: true,
       },
     });
+
+    await this.search.indexById(product.id);
+    await this.redis.delByPrefix("catalog:");
+    return this.mapProduct(product);
   }
 
-  async update(userId: string, id: string, dto: UpdateVendorProductDto) {
-    const vendor = await this.getVendor(userId);
-    const product = await this.prisma.client.product.findFirst({
+  async update(
+    userId: string,
+    id: string,
+    dto: UpdateVendorProductDto,
+  ): Promise<VendorProductDto> {
+    const vendor = await this.vendors.resolveVendorForUser(userId);
+    const existing = await this.prisma.client.product.findFirst({
       where: { id, vendorId: vendor.id, deletedAt: null },
+      include: { variants: true },
     });
 
-    if (!product) {
+    if (!existing) {
       throw new NotFoundException("Product not found");
     }
 
-    return this.prisma.client.product.update({
+    await this.prisma.client.product.update({
       where: { id },
       data: {
         name: dto.name,
@@ -76,10 +126,32 @@ export class VendorProductsService {
         isEligibleCheckout: dto.isEligibleCheckout,
       },
     });
+
+    if (dto.stock !== undefined || dto.price !== undefined) {
+      const variant = existing.variants[0];
+      if (variant) {
+        await this.prisma.client.productVariant.update({
+          where: { id: variant.id },
+          data: {
+            stock: dto.stock,
+            price: dto.price,
+            compareAtPrice: dto.compareAtPrice,
+          },
+        });
+      }
+    }
+
+    const product = await this.prisma.client.product.findUniqueOrThrow({
+      where: { id },
+      include: { category: true, images: true, variants: true },
+    });
+    await this.search.indexById(product.id);
+    await this.redis.delByPrefix("catalog:");
+    return this.mapProduct(product);
   }
 
   async archive(userId: string, id: string) {
-    const vendor = await this.getVendor(userId);
+    const vendor = await this.vendors.resolveVendorForUser(userId);
     const product = await this.prisma.client.product.findFirst({
       where: { id, vendorId: vendor.id, deletedAt: null },
     });
@@ -88,24 +160,50 @@ export class VendorProductsService {
       throw new NotFoundException("Product not found");
     }
 
-    return this.prisma.client.product.update({
+    await this.prisma.client.product.update({
       where: { id },
       data: {
         status: ProductStatus.ARCHIVED,
         deletedAt: new Date(),
       },
     });
+
+    await this.search.remove(id);
+    await this.redis.delByPrefix("catalog:");
+    return { message: "Product archived" };
   }
 
-  private async getVendor(userId: string) {
-    const vendor = await this.prisma.client.vendor.findFirst({
-      where: { ownerId: userId, deletedAt: null },
-    });
-
-    if (!vendor) {
-      throw new NotFoundException("Vendor not found");
-    }
-
-    return vendor;
+  private mapProduct(product: {
+    id: string;
+    name: string;
+    slug: string;
+    price: { toNumber?: () => number } | number;
+    compareAtPrice: { toNumber?: () => number } | number | null;
+    status: string;
+    rating: { toNumber?: () => number } | number;
+    reviewCount: number;
+    isEligibleSearch: boolean;
+    isEligibleCheckout: boolean;
+    category: { id: string; name: string };
+    images: { url: string; isPrimary: boolean }[];
+    variants: { stock: number }[];
+  }): VendorProductDto {
+    const primary = product.images.find((image) => image.isPrimary) ?? product.images[0];
+    return {
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      price: toNumber(product.price),
+      compareAtPrice: product.compareAtPrice ? toNumber(product.compareAtPrice) : null,
+      status: product.status,
+      stock: product.variants.reduce((sum, variant) => sum + variant.stock, 0),
+      rating: toNumber(product.rating),
+      reviewCount: product.reviewCount,
+      categoryName: product.category.name,
+      categoryId: product.category.id,
+      primaryImage: primary?.url ?? null,
+      isEligibleSearch: product.isEligibleSearch,
+      isEligibleCheckout: product.isEligibleCheckout,
+    };
   }
 }

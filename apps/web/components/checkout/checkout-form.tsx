@@ -8,6 +8,7 @@ interface CheckoutFormProps {
   subtotal: number;
   shipping: number;
   total: number;
+  affiliateCode?: string;
 }
 
 export function CheckoutForm({
@@ -16,6 +17,7 @@ export function CheckoutForm({
   subtotal,
   shipping,
   total,
+  affiliateCode,
 }: CheckoutFormProps) {
   const defaultAddr = addresses.find((a) => a.isDefault) ?? addresses[0];
 
@@ -137,21 +139,41 @@ export function CheckoutForm({
 
       <fieldset className="space-y-3">
         <legend className="text-lg font-semibold text-primary">Payment</legend>
-        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4 has-[:checked]:border-accent has-[:checked]:bg-accent/5">
-          <input
-            type="radio"
-            name="paymentMethod"
-            value="cod"
-            defaultChecked
-            className="text-accent"
-          />
-          <span>
-            <span className="font-medium text-primary">Cash on delivery</span>
-            <span className="mt-0.5 block text-sm text-muted">
-              Pay when your order arrives
+        {[
+          { value: "cod", title: "Cash on delivery", hint: "Pay when your order arrives" },
+          { value: "card", title: "Card", hint: "Visa, Mastercard — captured securely" },
+          { value: "jazzcash", title: "JazzCash", hint: "Mobile wallet checkout" },
+          { value: "easypaisa", title: "EasyPaisa", hint: "Mobile wallet checkout" },
+          { value: "bank_transfer", title: "Bank transfer", hint: "Pay into the marketplace account" },
+        ].map((method, index) => (
+          <label
+            key={method.value}
+            className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-4 has-[:checked]:border-accent has-[:checked]:bg-accent/5"
+          >
+            <input
+              type="radio"
+              name="paymentMethod"
+              value={method.value}
+              defaultChecked={index === 0}
+              className="text-accent"
+            />
+            <span>
+              <span className="font-medium text-primary">{method.title}</span>
+              <span className="mt-0.5 block text-sm text-muted">{method.hint}</span>
             </span>
-          </span>
+          </label>
+        ))}
+        <label className="block text-sm">
+          <span className="mb-1.5 block font-medium text-primary">Reward points to redeem</span>
+          <input
+            type="number"
+            min={0}
+            name="pointsToRedeem"
+            defaultValue={0}
+            className="w-full rounded-lg border border-border px-4 py-2.5 text-sm"
+          />
         </label>
+        <input type="hidden" name="affiliateCode" value={affiliateCode ?? ""} />
       </fieldset>
 
       <button

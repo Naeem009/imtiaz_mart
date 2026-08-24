@@ -78,7 +78,9 @@ export async function createOrderApi(body: {
   shippingState?: string;
   shippingPostal: string;
   shippingCountry?: string;
-  paymentMethod: "cod" | "card";
+  paymentMethod: "cod" | "card" | "jazzcash" | "easypaisa" | "bank_transfer";
+  pointsToRedeem?: number;
+  affiliateCode?: string;
 }): Promise<OrderDto> {
   const res = await fetch(`${siteConfig.apiUrl}/orders/create`, {
     method: "POST",

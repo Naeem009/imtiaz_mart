@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { ShopShell } from "@/components/layout/shop-shell";
@@ -6,6 +7,7 @@ import { fetchCart } from "@/lib/cart/api";
 import { fetchAddresses } from "@/lib/customer/api";
 import { getSession } from "@/lib/auth/session";
 import { formatPrice } from "@/lib/utils/currency";
+import { AFFILIATE_COOKIE } from "@/lib/commerce/affiliate";
 
 export const metadata = { title: "Checkout" };
 
@@ -23,7 +25,12 @@ export default async function CheckoutPage({
   }
 
   const { error } = await searchParams;
-  const [cart, addresses] = await Promise.all([fetchCart(), fetchAddresses()]);
+  const [cart, addresses, cookieStore] = await Promise.all([
+    fetchCart(),
+    fetchAddresses(),
+    cookies(),
+  ]);
+  const affiliateCode = cookieStore.get(AFFILIATE_COOKIE)?.value;
 
   if (!cart?.items.length) {
     redirect("/cart");
@@ -78,6 +85,7 @@ export default async function CheckoutPage({
           subtotal={cart.subtotal}
           shipping={shipping}
           total={total}
+          affiliateCode={affiliateCode}
         />
 
         <p className="mt-4 text-center text-sm text-muted">

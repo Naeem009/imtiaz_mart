@@ -1,59 +1,55 @@
-"use client";
+import { reindexCatalogSearchAction, reindexVisualSearchAction } from "@/lib/admin/actions";
 
-import { useState } from "react";
-import { siteConfig } from "@/config/site";
-
-export default function VisualSearchAdmin() {
-  const [running, setRunning] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [lastRun, setLastRun] = useState<string | null>(null);
-
-  async function handleReindex() {
-    setRunning(true);
-    setMessage(null);
-    try {
-      const res = await fetch(`${siteConfig.apiUrl}/products/visual-search/reindex`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ force: true }),
-      });
-
-      const text = await res.text();
-      if (!res.ok) throw new Error(text || "Reindex failed");
-
-      setMessage(text || "Reindex completed");
-      setLastRun(new Date().toISOString());
-    } catch (err: unknown) {
-      setMessage(err instanceof Error ? err.message : "Reindex failed");
-    } finally {
-      setRunning(false);
-    }
-  }
-
+export function VisualSearchAdmin({
+  indexed,
+  total,
+  engine,
+}: {
+  indexed?: string;
+  total?: string;
+  engine?: string;
+}) {
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Visual Search — Admin</h2>
-      <p className="text-sm text-muted">Trigger reindexing of product image embeddings.</p>
-      {message ? <div className="rounded p-3 bg-surface text-sm">{message}</div> : null}
-      <div className="flex gap-3">
-        <button
-          onClick={handleReindex}
-          disabled={running}
-          className="rounded bg-cta px-4 py-2 text-white"
-        >
-          {running ? "Reindexing…" : "Run Reindex"}
-        </button>
-        <button
-          onClick={() => {
-            setMessage(null);
-            setLastRun(null);
-          }}
-          className="rounded border px-4 py-2"
-        >
-          Clear
-        </button>
+      <div className="rounded-2xl border border-border bg-surface p-8 shadow-sm">
+        <h2 className="text-xl font-semibold text-primary">Image embeddings</h2>
+        <p className="mt-3 text-sm leading-7 text-muted">
+          Rebuild visual search embeddings for product images. This can take a few minutes on large catalogs.
+        </p>
+        {indexed && total ? (
+          <p className="mt-4 rounded-lg border border-border bg-background px-4 py-3 text-sm text-primary">
+            Indexed {indexed} of {total} product images.
+          </p>
+        ) : null}
+        <form action={reindexVisualSearchAction} className="mt-6">
+          <button
+            type="submit"
+            className="rounded-lg bg-cta px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90"
+          >
+            Run visual reindex
+          </button>
+        </form>
       </div>
-      {lastRun ? <p className="text-sm text-muted">Last run: {lastRun}</p> : null}
+
+      <div className="rounded-2xl border border-border bg-surface p-8 shadow-sm">
+        <h2 className="text-xl font-semibold text-primary">Catalog search (Elasticsearch)</h2>
+        <p className="mt-3 text-sm leading-7 text-muted">
+          Reindex products into Elasticsearch. If Elasticsearch is unavailable, search falls back to PostgreSQL.
+        </p>
+        {indexed && engine ? (
+          <p className="mt-4 rounded-lg border border-border bg-background px-4 py-3 text-sm text-primary">
+            Indexed {indexed} products via {engine}.
+          </p>
+        ) : null}
+        <form action={reindexCatalogSearchAction} className="mt-6">
+          <button
+            type="submit"
+            className="rounded-lg border border-border px-4 py-2.5 text-sm font-semibold text-primary hover:bg-background"
+          >
+            Run catalog reindex
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

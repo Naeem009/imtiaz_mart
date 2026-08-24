@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsIn, IsOptional, IsString, MinLength } from "class-validator";
+import { Type } from "class-transformer";
+import { IsIn, IsInt, IsOptional, IsString, Min, MinLength } from "class-validator";
 
 export class CreateOrderDto {
   @ApiProperty()
@@ -40,7 +41,24 @@ export class CreateOrderDto {
   @IsString()
   shippingCountry = "PK";
 
-  @ApiProperty({ enum: ["cod", "card"], default: "cod" })
-  @IsIn(["cod", "card"])
-  paymentMethod: "cod" | "card" = "cod";
+  @ApiProperty({ enum: ["cod", "card", "jazzcash", "easypaisa", "bank_transfer"], default: "cod" })
+  @IsIn(["cod", "card", "jazzcash", "easypaisa", "bank_transfer"])
+  paymentMethod: "cod" | "card" | "jazzcash" | "easypaisa" | "bank_transfer" = "cod";
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  cardToken?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  pointsToRedeem?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  affiliateCode?: string;
 }

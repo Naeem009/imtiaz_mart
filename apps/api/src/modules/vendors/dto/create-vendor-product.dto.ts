@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
+  IsBoolean,
   IsEnum,
   IsNumber,
   IsOptional,
@@ -57,10 +58,12 @@ export class CreateVendorProductDto {
 
   @ApiPropertyOptional({ description: "Include this product in AI commerce discovery feeds", default: true })
   @IsOptional()
+  @IsBoolean()
   isEligibleSearch?: boolean;
 
   @ApiPropertyOptional({ description: "Allow this product to be eligible for agentic checkout", default: false })
   @IsOptional()
+  @IsBoolean()
   isEligibleCheckout?: boolean;
 
   @ApiPropertyOptional()

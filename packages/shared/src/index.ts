@@ -14,3 +14,32 @@ export type { VendorOrderDto, VendorProductDto, VendorProfileDto } from "./types
 export type { CartDto, CartItemDto } from "./types/cart";
 export type { OrderDto, OrderItemDto } from "./types/order";
 export type { CustomerAddressDto } from "./types/customer";
+export type {
+  AffiliateDto,
+  BannerDto,
+  BlogPostDto,
+  CmsPageDto,
+  FaqDto,
+  MenuDto,
+  PaymentDto,
+  ReturnRequestDto,
+  ReviewDto,
+  RewardAccountDto,
+  SavedPaymentMethodDto,
+  VendorPayoutDto,
+  WishlistItemDto,
+} from "./types/commerce";
+export type {
+  AdminOrderDto,
+  AdminStatsDto,
+  AdminVendorDto,
+  AgentEligibilityProductDto,
+  AgentFeedStatusDto,
+  AdminSocialOverviewDto,
+  PublicVendorDto,
+  SocialAccountDto,
+  SocialAnalyticsDto,
+  SocialQueueItemDto,
+  SocialRuleDto,
+  VendorAnalyticsDto,
+} from "./types/admin";

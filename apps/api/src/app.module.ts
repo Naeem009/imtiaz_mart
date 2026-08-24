@@ -19,7 +19,16 @@ import { VisualSearchModule } from "@/modules/visual-search/visual-search.module
 import { UploadsModule } from "@/modules/uploads/uploads.module";
 import { FeedsModule } from "@/modules/feeds/feeds.module";
 import { SocialAutomationModule } from "@/modules/social-automation/social-automation.module";
-import { DashboardModule } from "@/modules/dashboard/dashboard.module";
+import { AdminModule } from "@/modules/admin/admin.module";
+import { RedisModule } from "@/modules/redis/redis.module";
+import { SearchModule } from "@/modules/search/search.module";
+import { ReviewsModule } from "@/modules/reviews/reviews.module";
+import { WishlistModule } from "@/modules/wishlist/wishlist.module";
+import { LoyaltyModule } from "@/modules/loyalty/loyalty.module";
+import { AffiliatesModule } from "@/modules/affiliates/affiliates.module";
+import { ReturnsModule } from "@/modules/returns/returns.module";
+import { PaymentsModule } from "@/modules/payments/payments.module";
+import { CmsModule } from "@/modules/cms/cms.module";
 
 @Module({
   imports: [
@@ -28,6 +37,8 @@ import { DashboardModule } from "@/modules/dashboard/dashboard.module";
       envFilePath: ["../../.env", ".env"],
     }),
     PrismaModule,
+    RedisModule,
+    SearchModule,
     CustomersModule,
     HealthModule,
     AuthModule,
@@ -42,7 +53,14 @@ import { DashboardModule } from "@/modules/dashboard/dashboard.module";
     UploadsModule,
     FeedsModule,
     SocialAutomationModule,
-    DashboardModule,
+    AdminModule,
+    ReviewsModule,
+    WishlistModule,
+    LoyaltyModule,
+    AffiliatesModule,
+    ReturnsModule,
+    PaymentsModule,
+    CmsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

@@ -1,94 +1,77 @@
+import type {
+  PaginatedResponse,
+  ProductListItem,
+  PublicVendorDto,
+  SocialAccountDto,
+  SocialAnalyticsDto,
+  SocialQueueItemDto,
+  SocialRuleDto,
+  VendorAnalyticsDto,
+  VendorOrderDto,
+  VendorProductDto,
+  VendorPayoutDto,
+  VendorProfileDto,
+} from "@imtiaz-mart/shared";
 import { siteConfig } from "@/config/site";
-import { getAccessToken } from "@/lib/auth/session";
+import { authFetchJson } from "@/lib/api/auth-fetch";
 
-async function authFetch<T>(path: string, init?: RequestInit): Promise<T | null> {
-  const token = await getAccessToken();
-  if (!token) return null;
-
-  try {
-    const res = await fetch(`${siteConfig.apiUrl}${path}`, {
-      ...init,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...init?.headers,
-      },
-      cache: "no-store",
-    });
-
-    if (!res.ok) return null;
-    return res.json() as Promise<T>;
-  } catch {
-    return null;
-  }
+export async function fetchVendorProfile() {
+  return authFetchJson<VendorProfileDto>("/vendor/profile");
 }
 
-export async function registerVendorApi(body: { storeName: string; description?: string }) {
-  return authFetch<{ id: string; name: string; slug: string }>('/vendor/register', {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
+export async function fetchVendorProducts() {
+  return authFetchJson<VendorProductDto[]>("/vendor/products");
+}
+
+export async function fetchVendorOrders(page = 1) {
+  return authFetchJson<PaginatedResponse<VendorOrderDto>>(`/vendor/orders?page=${page}`);
+}
+
+export async function fetchVendorAnalytics() {
+  return authFetchJson<VendorAnalyticsDto>("/vendor/analytics");
+}
+
+export async function fetchVendorPayouts() {
+  return (await authFetchJson<VendorPayoutDto[]>("/vendor/payouts")) ?? [];
+}
+
+export async function fetchSocialAccounts() {
+  return authFetchJson<SocialAccountDto[]>("/vendor/social-accounts");
+}
+
+export async function fetchSocialRules() {
+  return authFetchJson<SocialRuleDto[]>("/vendor/social-automation/rules");
+}
+
+export async function fetchSocialQueue() {
+  return authFetchJson<SocialQueueItemDto[]>("/vendor/social-automation/queue");
+}
+
+export async function fetchSocialAnalytics() {
+  return authFetchJson<SocialAnalyticsDto>("/vendor/social-automation/analytics");
+}
+
+export async function fetchPublicVendors(): Promise<PublicVendorDto[]> {
+  try {
+    const response = await fetch(`${siteConfig.apiUrl}/vendors`, {
+      next: { revalidate: 60 },
+    });
+    if (!response.ok) return [];
+    return response.json() as Promise<PublicVendorDto[]>;
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchVendorStore(slug: string) {
   try {
-    const res = await fetch(`${siteConfig.apiUrl}/vendors/${slug}`, {
+    const response = await fetch(`${siteConfig.apiUrl}/vendors/${slug}`, {
       next: { revalidate: 60 },
     });
-    if (!res.ok) return null;
-    const data = (await res.json()) as {
-      id: string;
-      name: string;
-      slug: string;
-      description: string | null;
-      logoUrl: string | null;
-      rating: number;
-      isVerified: boolean;
-      productCount: number;
-      products?: Array<{
-        id: string;
-        name: string;
-        slug: string;
-        price: number;
-        compareAtPrice: number | null;
-        shortDescription: string | null;
-        rating: number;
-        reviewCount: number;
-        badge: string | null;
-        category: { id?: string; name: string; slug: string };
-        vendor: { id?: string; name: string; slug: string; rating: number };
-        images: Array<{ id: string; url: string; alt: string | null; isPrimary: boolean }>;
-      }>;
-    };
-
-    return {
-      ...data,
-      products: (data.products ?? []).map((product) => ({
-        id: product.id,
-        name: product.name,
-        slug: product.slug,
-        price: product.price,
-        compareAtPrice: product.compareAtPrice,
-        rating: product.rating,
-        reviewCount: product.reviewCount,
-        badge: product.badge,
-        primaryImage: product.images.find((img) => img.isPrimary)?.url ?? product.images[0]?.url ?? null,
-        isEligibleSearch: true,
-        isEligibleCheckout: true,
-        vendor: {
-          id: product.vendor.id ?? product.vendor.slug,
-          name: product.vendor.name,
-          slug: product.vendor.slug,
-          rating: product.vendor.rating,
-        },
-        category: {
-          id: product.category.id ?? product.category.slug,
-          name: product.category.name,
-          slug: product.category.slug,
-        },
-        brand: null,
-      })),
-    };
+    if (!response.ok) return null;
+    return response.json() as Promise<
+      PublicVendorDto & { products: ProductListItem[] }
+    >;
   } catch {
     return null;
   }

@@ -1,4 +1,4 @@
-import { IsString, IsArray } from "class-validator";
+import { IsArray, IsString } from "class-validator";
 
 export class ConnectAccountDto {
   @IsString()
@@ -8,5 +8,7 @@ export class ConnectAccountDto {
   providerAccountId!: string;
 
   @IsArray()
+  @IsString({ each: true })
   scopes!: string[];
 }
+

@@ -6,6 +6,9 @@ import {
   mapProductListItem,
 } from "@/modules/catalog/catalog.mapper";
 import { ProductsQueryDto } from "./dto/products-query.dto";
+import { VisualSearchService } from "@/modules/visual-search/visual-search.service";
+import { RedisService } from "@/modules/redis/redis.module";
+import { CatalogSearchService } from "@/modules/search/catalog-search.service";
 
 const productInclude = {
   category: true,
@@ -17,10 +20,22 @@ const productInclude = {
 
 @Injectable()
 export class ProductsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private visualSearchService: VisualSearchService,
+    private redis: RedisService,
+    private search: CatalogSearchService,
+  ) {}
 
   async findAll(query: ProductsQueryDto) {
-    const where = this.buildWhere(query);
+    const cacheKey = `catalog:products:${JSON.stringify(query)}`;
+    const cached = await this.redis.getJson<{
+      data: ReturnType<typeof mapProductListItem>[];
+      meta: { page: number; limit: number; total: number; totalPages: number };
+    }>(cacheKey);
+    if (cached) return cached;
+
+    const where = await this.buildWhere(query);
     const orderBy = this.buildOrderBy(query.sort);
     const skip = (query.page - 1) * query.limit;
 
@@ -35,7 +50,7 @@ export class ProductsService {
       }),
     ]);
 
-    return {
+    const result = {
       data: products.map(mapProductListItem),
       meta: {
         page: query.page,
@@ -44,9 +59,15 @@ export class ProductsService {
         totalPages: Math.ceil(total / query.limit) || 1,
       },
     };
+    await this.redis.setJson(cacheKey, result, 60);
+    return result;
   }
 
   async findBySlug(slug: string) {
+    const cacheKey = `catalog:product:${slug}`;
+    const cached = await this.redis.getJson<ReturnType<typeof mapProductDetail>>(cacheKey);
+    if (cached) return cached;
+
     const product = await this.prisma.client.product.findFirst({
       where: {
         slug,
@@ -60,63 +81,50 @@ export class ProductsService {
       throw new NotFoundException("Product not found");
     }
 
-    return mapProductDetail(product);
+    const dto = mapProductDetail(product);
+    await this.redis.setJson(cacheKey, dto, 120);
+    return dto;
   }
 
   async getRecommendations(limit = 8) {
+    const cacheKey = `catalog:recommended:${limit}`;
+    const cached = await this.redis.getJson<ReturnType<typeof mapProductListItem>[]>(cacheKey);
+    if (cached) return cached;
+
     const products = await this.prisma.client.product.findMany({
       where: { status: ProductStatus.ACTIVE, deletedAt: null },
       include: productInclude,
       orderBy: [{ rating: "desc" }, { reviewCount: "desc" }],
       take: limit,
     });
-    return products.map(mapProductListItem);
+    const dto = products.map(mapProductListItem);
+    await this.redis.setJson(cacheKey, dto, 120);
+    return dto;
   }
 
   async visualSearch(body: { imageUrl?: string; query?: string }) {
-    const where: Prisma.ProductWhereInput = {
-      status: ProductStatus.ACTIVE,
-      deletedAt: null,
-    };
-
-    if (body.query) {
-      where.OR = [
-        { name: { contains: body.query, mode: "insensitive" } },
-        { shortDescription: { contains: body.query, mode: "insensitive" } },
-        { description: { contains: body.query, mode: "insensitive" } },
-      ];
-    }
-
-    if (body.imageUrl) {
-      where.images = {
-        some: {
-          url: { contains: body.imageUrl, mode: "insensitive" },
-        },
-      };
-    }
-
-    const products = await this.prisma.client.product.findMany({
-      where,
-      include: productInclude,
-      orderBy: [{ updatedAt: "desc" }],
-      take: 24,
-    });
-
-    return products.map(mapProductListItem);
+    return this.visualSearchService.search(body.imageUrl, body.query);
   }
 
-  private buildWhere(query: ProductsQueryDto): Prisma.ProductWhereInput {
+  private async buildWhere(query: ProductsQueryDto): Promise<Prisma.ProductWhereInput> {
     const where: Prisma.ProductWhereInput = {
       status: ProductStatus.ACTIVE,
       deletedAt: null,
     };
 
     if (query.q) {
-      where.OR = [
-        { name: { contains: query.q, mode: "insensitive" } },
-        { shortDescription: { contains: query.q, mode: "insensitive" } },
-        { description: { contains: query.q, mode: "insensitive" } },
-      ];
+      const ids = await this.search.searchProductIds(query.q);
+      if (ids && ids.length > 0) {
+        where.id = { in: ids };
+      } else if (ids && ids.length === 0) {
+        where.id = { in: [] };
+      } else {
+        where.OR = [
+          { name: { contains: query.q, mode: "insensitive" } },
+          { shortDescription: { contains: query.q, mode: "insensitive" } },
+          { description: { contains: query.q, mode: "insensitive" } },
+        ];
+      }
     }
     if (query.category) {
       where.category = { slug: query.category };

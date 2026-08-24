@@ -76,7 +76,15 @@ export async function checkoutAction(formData: FormData) {
   try {
     const order = await createOrderApi({
       ...shipping,
-      paymentMethod: (formData.get("paymentMethod") as "cod" | "card") || "cod",
+      paymentMethod:
+        (formData.get("paymentMethod") as
+          | "cod"
+          | "card"
+          | "jazzcash"
+          | "easypaisa"
+          | "bank_transfer") || "cod",
+      pointsToRedeem: Number(formData.get("pointsToRedeem") ?? 0) || undefined,
+      affiliateCode: (formData.get("affiliateCode") as string) || undefined,
     });
     revalidatePath("/cart");
     redirect(`/orders/${order.orderNumber}`);

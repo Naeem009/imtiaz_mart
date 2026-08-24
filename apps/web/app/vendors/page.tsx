@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { ShopShell } from "@/components/layout/shop-shell";
-import { featuredVendors } from "@/lib/data/homepage";
+import { fetchPublicVendors } from "@/lib/vendor/api";
 
 export const metadata = { title: "Vendors" };
 
-export default function VendorsPage() {
+export default async function VendorsPage() {
+  const vendors = await fetchPublicVendors();
+
   return (
     <ShopShell>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
@@ -26,23 +28,33 @@ export default function VendorsPage() {
         </div>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {featuredVendors.map((vendor) => (
-            <Link
-              key={vendor.id}
-              href={`/vendors/${vendor.slug}`}
-              className="group rounded-xl border border-border bg-surface p-6 transition-shadow hover:shadow-md"
-            >
-              <div className={`flex h-16 w-16 items-center justify-center rounded-full text-xl font-bold text-primary/50 ${vendor.image}`}>
-                {vendor.name.charAt(0)}
-              </div>
-              <h2 className="mt-4 text-lg font-semibold text-primary group-hover:text-accent">
-                {vendor.name}
-              </h2>
-              <p className="mt-2 text-sm text-muted">
-                ★ {vendor.rating} · {vendor.productCount} products
-              </p>
-            </Link>
-          ))}
+          {vendors.length === 0 ? (
+            <p className="text-sm text-muted">No vendor stores are public yet.</p>
+          ) : (
+            vendors.map((vendor) => (
+              <Link
+                key={vendor.id}
+                href={`/vendors/${vendor.slug}`}
+                className="group rounded-xl border border-border bg-surface p-6 transition-shadow hover:shadow-md"
+              >
+                <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-background text-xl font-bold text-primary/50">
+                  {vendor.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={vendor.logoUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    vendor.name.charAt(0)
+                  )}
+                </div>
+                <h2 className="mt-4 text-lg font-semibold text-primary group-hover:text-accent">
+                  {vendor.name}
+                </h2>
+                <p className="mt-2 text-sm text-muted">
+                  ★ {vendor.rating.toFixed(1)} · {vendor.productCount} products
+                  {vendor.isVerified ? " · Verified" : ""}
+                </p>
+              </Link>
+            ))
+          )}
         </div>
       </div>
     </ShopShell>

@@ -57,6 +57,14 @@ export class VendorsController {
     return this.vendors.updateProfile(user.sub, dto);
   }
 
+  @Get("analytics")
+  @Roles("vendor", "vendor_staff")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get vendor store analytics" })
+  analytics(@CurrentUser() user: JwtPayload) {
+    return this.vendors.getAnalytics(user.sub);
+  }
+
   @Get("products")
   @Roles("vendor", "vendor_staff")
   @ApiBearerAuth()
@@ -115,6 +123,13 @@ export class VendorsController {
 @Controller({ path: "vendors", version: API_VERSION })
 export class PublicVendorsController {
   constructor(private vendors: VendorsService) {}
+
+  @Public()
+  @Get()
+  @ApiOperation({ summary: "List public vendor stores" })
+  list() {
+    return this.vendors.listPublic();
+  }
 
   @Public()
   @Get(":slug")

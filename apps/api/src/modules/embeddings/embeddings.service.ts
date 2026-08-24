@@ -1,5 +1,4 @@
 import { Injectable, Logger } from "@nestjs/common";
-import fetch from "node-fetch";
 
 @Injectable()
 export class EmbeddingsService {
@@ -39,10 +38,10 @@ export class EmbeddingsService {
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
           body: JSON.stringify({ input: text, model: process.env.OPENAI_EMBED_MODEL ?? "text-embedding-3-small" }),
         });
-        const j: any = await res.json();
+        const j = (await res.json()) as { data?: Array<{ embedding?: number[] }> };
         return j.data?.[0]?.embedding ?? this.seededVector(text);
       } catch (err) {
-        this.logger.warn("OpenAI embedding failed, falling back to seeded vector", err as any);
+        this.logger.warn("OpenAI embedding failed, falling back to seeded vector", err);
         return this.seededVector(text);
       }
     }

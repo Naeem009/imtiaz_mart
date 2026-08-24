@@ -2,9 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToCartPanel } from "@/components/product/add-to-cart-panel";
 import { ProductGallery } from "@/components/product/product-gallery";
+import { ProductReviews } from "@/components/product/product-reviews";
+import { WishlistButton } from "@/components/product/wishlist-button";
 import { ProductGrid } from "@/components/shop/product-grid";
 import { ShopShell } from "@/components/layout/shop-shell";
 import { fetchProduct, fetchRecommended } from "@/lib/catalog/fetch";
+import { fetchProductReviews } from "@/lib/commerce/api";
+import { getSession } from "@/lib/auth/session";
 
 export async function generateMetadata({
   params,
@@ -21,14 +25,21 @@ export async function generateMetadata({
 
 export default async function ProductPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { slug } = await params;
+  const { error } = await searchParams;
   const product = await fetchProduct(slug);
   if (!product) notFound();
 
-  const related = await fetchRecommended();
+  const [related, reviews, user] = await Promise.all([
+    fetchRecommended(),
+    fetchProductReviews(slug),
+    getSession(),
+  ]);
 
   return (
     <ShopShell>
@@ -95,15 +106,7 @@ export default async function ProductPage({
             </div>
 
             <div className="mt-6 flex gap-4 text-sm">
-              <button type="button" className="text-muted hover:text-accent">
-                ♡ Wishlist
-              </button>
-              <button type="button" className="text-muted hover:text-accent">
-                ⇄ Compare
-              </button>
-              <button type="button" className="text-muted hover:text-accent">
-                Share
-              </button>
+              <WishlistButton productId={product.id} slug={product.slug} />
             </div>
           </div>
         </div>
@@ -115,15 +118,13 @@ export default async function ProductPage({
           </p>
         </section>
 
-        <section className="mt-12 rounded-xl border border-border bg-surface p-8 text-center">
-          <h2 className="text-lg font-semibold text-primary">
-            Reviews & Q&A
-          </h2>
-          <p className="mt-2 text-sm text-muted">
-            Customer reviews and questions will appear here once the engagement
-            module is connected.
-          </p>
-        </section>
+        <ProductReviews
+          slug={slug}
+          productId={product.id}
+          reviews={reviews}
+          canWrite={Boolean(user)}
+          error={error}
+        />
 
         <section className="mt-16">
           <h2 className="mb-6 text-xl font-bold text-primary">

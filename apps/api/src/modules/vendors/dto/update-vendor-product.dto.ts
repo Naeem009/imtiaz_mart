@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import {
+  IsBoolean,
   IsEnum,
   IsNumber,
   IsOptional,
@@ -52,9 +53,11 @@ export class UpdateVendorProductDto {
 
   @ApiPropertyOptional({ description: "Include this product in AI commerce discovery feeds" })
   @IsOptional()
+  @IsBoolean()
   isEligibleSearch?: boolean;
 
   @ApiPropertyOptional({ description: "Allow this product to be eligible for agentic checkout" })
   @IsOptional()
+  @IsBoolean()
   isEligibleCheckout?: boolean;
 }

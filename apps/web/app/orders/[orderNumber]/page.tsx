@@ -4,6 +4,7 @@ import { ShopShell } from "@/components/layout/shop-shell";
 import { fetchOrder } from "@/lib/cart/api";
 import { getSession } from "@/lib/auth/session";
 import { formatPrice } from "@/lib/utils/currency";
+import { createReturnAction } from "@/lib/commerce/actions";
 
 export async function generateMetadata({
   params,
@@ -66,10 +67,25 @@ export default async function OrderConfirmationPage({
               <dt className="text-muted">Shipping</dt>
               <dd>{formatPrice(order.shippingAmount)}</dd>
             </div>
+            {order.pointsRedeemed ? (
+              <div className="flex justify-between">
+                <dt className="text-muted">Points redeemed</dt>
+                <dd>{order.pointsRedeemed}</dd>
+              </div>
+            ) : null}
             <div className="flex justify-between font-semibold text-primary">
               <dt>Total</dt>
               <dd>{formatPrice(order.total)}</dd>
             </div>
+            {order.paymentMethod ? (
+              <div className="flex justify-between">
+                <dt className="text-muted">Payment</dt>
+                <dd>
+                  {order.paymentMethod}
+                  {order.paymentStatus ? ` · ${order.paymentStatus}` : ""}
+                </dd>
+              </div>
+            ) : null}
           </dl>
           <div className="mt-6 border-t border-border pt-4 text-sm text-muted">
             <p className="font-medium text-primary">Ship to</p>
@@ -90,6 +106,42 @@ export default async function OrderConfirmationPage({
             </p>
           </div>
         </div>
+
+        {["SHIPPED", "DELIVERED"].includes(order.status) ? (
+          <form
+            action={createReturnAction}
+            className="mt-8 rounded-xl border border-border bg-surface p-6 text-left"
+          >
+            <h2 className="font-semibold text-primary">Request a return</h2>
+            <input type="hidden" name="orderNumber" value={order.orderNumber} />
+            <ul className="mt-4 space-y-2">
+              {order.items.map((item) => (
+                <li key={item.id}>
+                  <label className="flex items-center gap-3 text-sm">
+                    <input type="checkbox" name="itemIds" value={item.id} defaultChecked />
+                    <span>
+                      {item.productName} ({item.variantName}) × {item.quantity}
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+            <label className="mt-4 block text-sm">
+              <span className="mb-1.5 block font-medium">Reason</span>
+              <input
+                name="reason"
+                defaultValue="Not as described"
+                className="w-full rounded-lg border border-border px-4 py-2.5"
+              />
+            </label>
+            <button
+              type="submit"
+              className="mt-4 rounded-lg bg-cta px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90"
+            >
+              Submit return request
+            </button>
+          </form>
+        ) : null}
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link

@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { seedCatalog } from "./seed-catalog";
+import { seedCms } from "./seed-cms";
 
 const prisma = new PrismaClient();
 const BCRYPT_ROUNDS = 12;
@@ -49,6 +50,13 @@ async function ensureDemoUsers() {
       lastName: "Customer",
       roles: ["customer"],
     },
+    {
+      email: "affiliate@example.com",
+      password: "Affiliate123!",
+      firstName: "Demo",
+      lastName: "Affiliate",
+      roles: ["affiliate", "customer"],
+    },
   ] as const;
 
   for (const demo of demoUsers) {
@@ -91,9 +99,9 @@ async function ensureDemoUsers() {
     }
 
     if (demo.roles.includes("vendor")) {
-      const vendor = await prisma.vendor.findFirst({ where: { ownerId: user.id } });
+      let vendor = await prisma.vendor.findFirst({ where: { ownerId: user.id } });
       if (!vendor) {
-        await prisma.vendor.create({
+        vendor = await prisma.vendor.create({
           data: {
             ownerId: user.id,
             name: "Demo Vendor Store",
@@ -104,6 +112,15 @@ async function ensureDemoUsers() {
           },
         });
       }
+
+      await prisma.vendorSubscription.upsert({
+        where: { vendorId: vendor.id },
+        update: { tier: "PREMIUM" },
+        create: {
+          vendorId: vendor.id,
+          tier: "PREMIUM",
+        },
+      });
     }
 
     if (demo.roles.includes("vendor_staff")) {
@@ -128,6 +145,19 @@ async function ensureDemoUsers() {
   console.log("Seeded demo accounts");
 }
 
+async function ensureDemoAffiliate() {
+  const user = await prisma.user.findUnique({ where: { email: "affiliate@example.com" } });
+  if (!user) return;
+  await prisma.affiliate.upsert({
+    where: { userId: user.id },
+    update: {},
+    create: {
+      userId: user.id,
+      code: "ATV-DEMO",
+    },
+  });
+}
+
 async function main() {
   for (const role of ROLES) {
     await prisma.role.upsert({
@@ -138,7 +168,9 @@ async function main() {
   }
   console.log(`Seeded ${ROLES.length} roles`);
   await ensureDemoUsers();
+  await ensureDemoAffiliate();
   await seedCatalog();
+  await seedCms(prisma);
 }
 
 main()

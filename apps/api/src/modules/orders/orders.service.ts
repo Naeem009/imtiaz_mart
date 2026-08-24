@@ -9,6 +9,9 @@ import { v7 as uuidv7 } from "uuid";
 import { PrismaService } from "@/modules/prisma/prisma.service";
 import { CartService } from "@/modules/cart/cart.service";
 import { CustomersService } from "@/modules/customers/customers.service";
+import { LoyaltyService } from "@/modules/loyalty/loyalty.service";
+import { AffiliatesService } from "@/modules/affiliates/affiliates.service";
+import { PaymentsService, type PaymentMethod } from "@/modules/payments/payments.service";
 import { CreateOrderDto } from "./dto/create-order.dto";
 
 const FREE_SHIPPING_THRESHOLD = 2999;
@@ -20,6 +23,9 @@ export class OrdersService {
     private prisma: PrismaService,
     private cartService: CartService,
     private customers: CustomersService,
+    private loyalty: LoyaltyService,
+    private affiliates: AffiliatesService,
+    private payments: PaymentsService,
   ) {}
 
   async create(
@@ -52,8 +58,14 @@ export class OrdersService {
     const shippingAmount =
       subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
     const taxAmount = 0;
-    const total = subtotal + shippingAmount + taxAmount;
+
+    const rewards = await this.loyalty.ensureAccount(userId);
+    const requestedPoints = Math.max(0, dto.pointsToRedeem ?? 0);
+    const usedPoints = this.loyalty.maxRedeemable(subtotal, Math.min(requestedPoints, rewards.balance));
+    const discount = this.loyalty.redeemableValue(usedPoints);
+    const total = Math.max(0, subtotal + shippingAmount + taxAmount - discount);
     const orderNumber = `IMT-${Date.now().toString(36).toUpperCase()}`;
+    const method = dto.paymentMethod as PaymentMethod;
 
     const order = await this.prisma.client.$transaction(async (tx) => {
       const created = await tx.order.create({
@@ -66,6 +78,8 @@ export class OrdersService {
           shippingAmount,
           taxAmount,
           total,
+          affiliateCode: dto.affiliateCode,
+          pointsRedeemed: usedPoints,
           shippingName: dto.shippingName,
           shippingPhone: dto.shippingPhone,
           shippingLine1: dto.shippingLine1,
@@ -98,16 +112,30 @@ export class OrdersService {
             create: {
               id: uuidv7(),
               amount: total,
-              method: dto.paymentMethod,
-              status:
-                dto.paymentMethod === "cod"
-                  ? PaymentStatus.PENDING
-                  : PaymentStatus.PENDING,
+              method,
+              status: PaymentStatus.PENDING,
             },
           },
         },
         include: { items: true, payments: true },
       });
+
+      if (usedPoints > 0) {
+        await tx.rewardAccount.update({
+          where: { id: rewards.id },
+          data: { balance: { decrement: usedPoints } },
+        });
+        await tx.rewardTransaction.create({
+          data: {
+            id: uuidv7(),
+            accountId: rewards.id,
+            points: -usedPoints,
+            type: "REDEEM",
+            note: "Checkout redemption",
+            orderId: created.id,
+          },
+        });
+      }
 
       for (const item of cartRecord.items) {
         await tx.productVariant.update({
@@ -118,35 +146,69 @@ export class OrdersService {
 
       await tx.cartItem.deleteMany({ where: { cartId: cartRecord.id } });
 
-      if (dto.paymentMethod === "cod") {
-        await tx.order.update({
-          where: { id: created.id },
-          data: { status: OrderStatus.CONFIRMED },
-        });
-        await tx.orderStatusHistory.create({
-          data: {
-            id: uuidv7(),
-            orderId: created.id,
-            status: OrderStatus.CONFIRMED,
-            note: "Cash on delivery — order confirmed",
-          },
-        });
-      }
-
       return tx.order.findUniqueOrThrow({
         where: { id: created.id },
-        include: { items: true },
+        include: { items: true, payments: true },
       });
     });
 
-    return this.mapOrder(order);
+    const payment = order.payments[0];
+    if (payment) {
+      await this.payments.capture({
+        paymentId: payment.id,
+        method,
+        amount: total,
+        cardToken: dto.cardToken,
+      });
+    }
+
+    const paid = method !== "cod";
+    if (paid) {
+      await this.payments.createEscrow(
+        order.id,
+        order.items.map((item) => ({ vendorId: item.vendorId, total: Number(item.total) })),
+      );
+      const earned = await this.loyalty.earn(userId, order.id, total);
+      await this.affiliates.attributeOrder(dto.affiliateCode, order.id, subtotal);
+      await this.prisma.client.order.update({
+        where: { id: order.id },
+        data: { status: OrderStatus.CONFIRMED, pointsEarned: earned },
+      });
+      await this.prisma.client.orderStatusHistory.create({
+        data: {
+          id: uuidv7(),
+          orderId: order.id,
+          status: OrderStatus.CONFIRMED,
+          note: `Paid with ${method}`,
+        },
+      });
+    } else {
+      await this.prisma.client.order.update({
+        where: { id: order.id },
+        data: { status: OrderStatus.CONFIRMED },
+      });
+      await this.prisma.client.orderStatusHistory.create({
+        data: {
+          id: uuidv7(),
+          orderId: order.id,
+          status: OrderStatus.CONFIRMED,
+          note: "Cash on delivery — order confirmed",
+        },
+      });
+    }
+
+    const fresh = await this.prisma.client.order.findUniqueOrThrow({
+      where: { id: order.id },
+      include: { items: true, payments: true },
+    });
+    return this.mapOrder(fresh);
   }
 
   async findByOrderNumber(userId: string, orderNumber: string) {
     const customer = await this.customers.ensureCustomer(userId);
     const order = await this.prisma.client.order.findFirst({
       where: { orderNumber, customerId: customer.id },
-      include: { items: true },
+      include: { items: true, payments: true },
     });
     if (!order) throw new NotFoundException("Order not found");
     return this.mapOrder(order);
@@ -156,7 +218,7 @@ export class OrdersService {
     const customer = await this.customers.ensureCustomer(userId);
     const orders = await this.prisma.client.order.findMany({
       where: { customerId: customer.id },
-      include: { items: true },
+      include: { items: true, payments: true },
       orderBy: { createdAt: "desc" },
     });
     return orders.map((o) => this.mapOrder(o));
@@ -178,6 +240,8 @@ export class OrdersService {
     shippingPostal: string;
     shippingCountry: string;
     createdAt: Date;
+    pointsEarned?: number;
+    pointsRedeemed?: number;
     items: Array<{
       id: string;
       productName: string;
@@ -186,6 +250,7 @@ export class OrdersService {
       quantity: number;
       total: { toNumber?: () => number } | number;
     }>;
+    payments?: Array<{ method: string; status: string }>;
   }): OrderDto {
     const num = (v: { toNumber?: () => number } | number) =>
       typeof v === "number" ? v : Number(v.toNumber?.() ?? v);
@@ -206,6 +271,10 @@ export class OrdersService {
       shippingPostal: order.shippingPostal,
       shippingCountry: order.shippingCountry,
       createdAt: order.createdAt.toISOString(),
+      paymentMethod: order.payments?.[0]?.method,
+      paymentStatus: order.payments?.[0]?.status,
+      pointsEarned: order.pointsEarned,
+      pointsRedeemed: order.pointsRedeemed,
       items: order.items.map((i) => ({
         id: i.id,
         productName: i.productName,

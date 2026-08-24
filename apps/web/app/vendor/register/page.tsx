@@ -6,9 +6,14 @@ import { registerVendorAction } from "@/lib/vendor/actions";
 
 export const metadata = { title: "Become a vendor" };
 
-export default async function VendorRegisterPage() {
+export default async function VendorRegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   const user = await getSession();
   if (!user) redirect("/login?redirect=/vendor/register");
+  const { error } = await searchParams;
 
   return (
     <div className="mx-auto flex min-h-screen max-w-5xl items-center px-4 py-16 sm:px-6 lg:px-8">
@@ -33,6 +38,9 @@ export default async function VendorRegisterPage() {
 
         <div className="rounded-xl border border-border bg-background p-6">
           <form action={registerVendorAction} className="space-y-4">
+            {error ? (
+              <p className="rounded-lg bg-error/10 px-4 py-3 text-sm text-error">{error}</p>
+            ) : null}
             <div>
               <label htmlFor="storeName" className="mb-1.5 block text-sm font-medium text-primary">
                 Store name
