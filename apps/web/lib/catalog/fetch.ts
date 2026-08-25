@@ -1,8 +1,9 @@
-import type { PaginatedProducts, ProductListItem } from "@imtiaz-mart/shared";
+import type { PaginatedProducts, ProductDetail, ProductListItem } from "@imtiaz-mart/shared";
 import {
   getBrands,
   getCategories,
   getCategoryProducts,
+  getCompareProducts,
   getProduct,
   getProducts,
   getRecommendedProducts,
@@ -52,4 +53,9 @@ export async function fetchBrands() {
 
 export async function fetchRecommended(): Promise<ProductListItem[]> {
   return (await getRecommendedProducts(8)) ?? [];
+}
+
+export async function fetchCompareProducts(ids: string[]): Promise<ProductDetail[]> {
+  if (ids.length === 0) return [];
+  return getCompareProducts(ids);
 }

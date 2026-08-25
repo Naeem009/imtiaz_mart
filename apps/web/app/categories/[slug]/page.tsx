@@ -1,19 +1,25 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductGrid } from "@/components/shop/product-grid";
 import { Pagination } from "@/components/shop/pagination";
 import { ShopToolbar } from "@/components/shop/shop-toolbar";
 import { ShopShell } from "@/components/layout/shop-shell";
+import { JsonLd } from "@/components/seo/json-ld";
 import { getCategory } from "@/lib/api/catalog";
 import { fetchCategoryProducts } from "@/lib/catalog/fetch";
+import { breadcrumbJsonLd, itemListJsonLd } from "@/lib/seo/json-ld";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
-}) {
+}): Promise<Metadata> {
   const { slug } = await params;
   const cat = await getCategory(slug);
-  return { title: cat?.name ?? "Category" };
+  return {
+    title: cat?.name ?? "Category",
+    alternates: { canonical: `/categories/${slug}` },
+  };
 }
 
 export default async function CategoryPage({
@@ -35,6 +41,16 @@ export default async function CategoryPage({
 
   return (
     <ShopShell>
+      <JsonLd
+        data={itemListJsonLd(category.name, `/categories/${slug}`, result.data)}
+      />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Shop", path: "/shop" },
+          { name: category.name },
+        ])}
+      />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         <h1 className="text-3xl font-bold text-primary">{category.name}</h1>
         <p className="mt-2 text-muted">

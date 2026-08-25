@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { GoogleLoginButton } from "@/components/auth/google-login-button";
 import { siteConfig } from "@/config/site";
 import { getSession } from "@/lib/auth/session";
 import { registerVendorAction } from "@/lib/vendor/actions";
@@ -12,7 +12,6 @@ export default async function VendorRegisterPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const user = await getSession();
-  if (!user) redirect("/login?redirect=/vendor/register");
   const { error } = await searchParams;
 
   return (
@@ -37,41 +36,75 @@ export default async function VendorRegisterPage({
         </div>
 
         <div className="rounded-xl border border-border bg-background p-6">
-          <form action={registerVendorAction} className="space-y-4">
-            {error ? (
-              <p className="rounded-lg bg-error/10 px-4 py-3 text-sm text-error">{error}</p>
-            ) : null}
-            <div>
-              <label htmlFor="storeName" className="mb-1.5 block text-sm font-medium text-primary">
-                Store name
-              </label>
-              <input
-                id="storeName"
-                name="storeName"
-                required
-                className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm"
-              />
+          {user ? (
+            <form action={registerVendorAction} className="space-y-4">
+              {error ? (
+                <p className="rounded-lg bg-error/10 px-4 py-3 text-sm text-error">{error}</p>
+              ) : null}
+              <div>
+                <label htmlFor="storeName" className="mb-1.5 block text-sm font-medium text-primary">
+                  Store name
+                </label>
+                <input
+                  id="storeName"
+                  name="storeName"
+                  required
+                  className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm"
+                />
+              </div>
+              <div>
+                <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-primary">
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  rows={4}
+                  className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full rounded-lg bg-cta px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90"
+              >
+                Create vendor account
+              </button>
+            </form>
+          ) : (
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-primary">Create your seller account</h2>
+              <p className="text-sm leading-6 text-muted">
+                Continue with Google or email, then add your store name.
+              </p>
+              {error ? (
+                <p className="rounded-lg bg-error/10 px-4 py-3 text-sm text-error">
+                  {decodeURIComponent(error)}
+                </p>
+              ) : null}
+              <GoogleLoginButton redirect="/vendor/register" errorPath="/vendor/register" />
+              <p className="text-center text-sm text-muted">
+                Or{" "}
+                <Link
+                  href="/login?redirect=/vendor/register"
+                  className="font-medium text-accent hover:underline"
+                >
+                  sign in with email
+                </Link>
+                {" · "}
+                <Link
+                  href="/register?redirect=/vendor/register"
+                  className="font-medium text-accent hover:underline"
+                >
+                  create an email account
+                </Link>
+              </p>
             </div>
-            <div>
-              <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-primary">
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                rows={4}
-                className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm"
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-cta px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90"
-            >
-              Create vendor account
-            </button>
-          </form>
+          )}
           <p className="mt-4 text-sm text-muted">
-            Already have a store? <Link href="/account" className="text-accent hover:underline">Open your dashboard</Link>
+            Already have a store?{" "}
+            <Link href="/account" className="text-accent hover:underline">
+              Open your dashboard
+            </Link>
           </p>
         </div>
       </div>

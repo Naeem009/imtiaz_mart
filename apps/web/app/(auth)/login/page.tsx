@@ -71,7 +71,7 @@ export default async function LoginPage({
           </div>
 
           <div className="mt-5">
-            <GoogleLoginButton redirect={redirectTo ?? "/account"} />
+            <GoogleLoginButton redirect={redirectTo ?? "/account"} errorPath="/login" />
           </div>
         </div>
         <p className="mt-6 text-center text-sm text-muted">

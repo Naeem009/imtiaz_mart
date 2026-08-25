@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { JsonLd } from "@/components/seo/json-ld";
 import { siteConfig } from "@/config/site";
+import { websiteJsonLd } from "@/lib/seo/json-ld";
+import { siteOrigin } from "@/lib/seo/urls";
 import "./globals.css";
 
 const inter = Inter({
@@ -21,6 +24,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteOrigin()),
   title: {
     default: siteConfig.name,
     template: `%s | ${siteConfig.name}`,
@@ -33,6 +37,12 @@ export const metadata: Metadata = {
     ],
     apple: siteConfig.logo.src,
     shortcut: "/favicon.png",
+  },
+  openGraph: {
+    type: "website",
+    siteName: siteConfig.name,
+    title: siteConfig.name,
+    description: siteConfig.description,
   },
 };
 
@@ -48,6 +58,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col bg-background text-text">
+        <JsonLd data={websiteJsonLd()} />
         {children}
         <MobileNav />
       </body>

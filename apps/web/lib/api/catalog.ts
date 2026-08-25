@@ -87,3 +87,9 @@ export async function getCategoryProducts(
 export async function getBrands(): Promise<BrandListItem[] | null> {
   return apiFetch<BrandListItem[]>("/brands");
 }
+
+export async function getCompareProducts(ids: string[]): Promise<ProductDetail[]> {
+  if (ids.length === 0) return [];
+  const qs = encodeURIComponent(ids.join(","));
+  return (await apiFetch<ProductDetail[]>(`/products/compare?ids=${qs}`)) ?? [];
+}

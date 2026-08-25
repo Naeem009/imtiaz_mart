@@ -1,13 +1,16 @@
 import { ShopShell } from "@/components/layout/shop-shell";
+import { JsonLd } from "@/components/seo/json-ld";
 import { fetchFaqs } from "@/lib/commerce/api";
+import { faqJsonLd } from "@/lib/seo/json-ld";
 
-export const metadata = { title: "FAQ" };
+export const metadata = { title: "FAQ", alternates: { canonical: "/faq" } };
 
 export default async function FaqPage() {
   const faqs = await fetchFaqs();
 
   return (
     <ShopShell>
+      <JsonLd data={faqJsonLd(faqs)} />
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
         <h1 className="text-3xl font-bold text-primary">Frequently asked questions</h1>
         <div className="mt-8 space-y-4">

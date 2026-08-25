@@ -2,12 +2,15 @@ import { ProductGrid } from "@/components/shop/product-grid";
 import { Pagination } from "@/components/shop/pagination";
 import { ShopToolbar } from "@/components/shop/shop-toolbar";
 import { ShopShell } from "@/components/layout/shop-shell";
+import { JsonLd } from "@/components/seo/json-ld";
 import { fetchCategories, fetchProducts } from "@/lib/catalog/fetch";
+import { itemListJsonLd } from "@/lib/seo/json-ld";
 import Link from "next/link";
 
 export const metadata = {
   title: "Shop",
   description: "Browse all products on ATVOO",
+  alternates: { canonical: "/shop" },
 };
 
 export default async function ShopPage({
@@ -32,6 +35,7 @@ export default async function ShopPage({
 
   return (
     <ShopShell>
+      <JsonLd data={itemListJsonLd("Shop", "/shop", result.data)} />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         <h1 className="text-3xl font-bold text-primary">Shop</h1>
         <p className="mt-2 text-muted">Discover products from verified vendors</p>

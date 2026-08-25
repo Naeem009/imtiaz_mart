@@ -1,34 +1,27 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth/session";
 import { fetchCart } from "@/lib/cart/api";
+import { getCompareIds } from "@/lib/compare/cookie";
 import { SiteLogo } from "@/components/layout/site-logo";
+import { SearchBox } from "@/components/search/search-box";
 
 export async function SiteHeader() {
-  const [user, cart] = await Promise.all([getSession(), fetchCart()]);
+  const [user, cart, compareIds] = await Promise.all([
+    getSession(),
+    fetchCart(),
+    getCompareIds(),
+  ]);
   const cartCount = cart?.itemCount ?? 0;
+  const compareCount = compareIds.length;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:h-16 sm:px-6 lg:px-8">
         <SiteLogo variant="header" priority />
 
-        <form
-          action="/search"
-          method="get"
-          className="hidden flex-1 max-w-xl md:block"
-          role="search"
-        >
-          <label htmlFor="header-search" className="sr-only">
-            Search products
-          </label>
-          <input
-            id="header-search"
-            name="q"
-            type="search"
-            placeholder="Search products, brands, vendors..."
-            className="w-full rounded-lg border border-border bg-surface px-4 py-2 text-sm text-text outline-none transition-colors placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/20"
-          />
-        </form>
+        <div className="relative min-w-0 flex-1 max-w-xl">
+          <SearchBox />
+        </div>
 
         <nav className="ml-auto flex items-center gap-3 text-sm sm:gap-5">
           <Link
@@ -54,6 +47,18 @@ export async function SiteHeader() {
             className="hidden text-muted hover:text-text lg:inline"
           >
             Visual Search
+          </Link>
+          <Link
+            href="/compare"
+            className="relative hidden text-muted hover:text-text lg:inline"
+            aria-label={`Compare products${compareCount ? `, ${compareCount} selected` : ""}`}
+          >
+            Compare
+            {compareCount > 0 ? (
+              <span className="ml-1 rounded-full bg-accent px-1.5 text-xs font-bold text-white">
+                {compareCount}
+              </span>
+            ) : null}
           </Link>
           <Link
             href="/cart"

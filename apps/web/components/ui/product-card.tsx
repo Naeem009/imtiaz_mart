@@ -1,12 +1,15 @@
 import Link from "next/link";
 import type { ProductListItem } from "@imtiaz-mart/shared";
+import { CompareToggle } from "@/components/product/compare-toggle";
+import { getCompareIds } from "@/lib/compare/cookie";
 import { formatPrice } from "@/lib/utils/currency";
 
 interface ProductCardProps {
   product: ProductListItem;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export async function ProductCard({ product }: ProductCardProps) {
+  const compared = (await getCompareIds()).includes(product.id);
   const discount =
     product.compareAtPrice && product.compareAtPrice > product.price
       ? Math.round(
@@ -64,6 +67,9 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
       </Link>
+      <div className="mt-2">
+        <CompareToggle productId={product.id} selected={compared} />
+      </div>
     </article>
   );
 }

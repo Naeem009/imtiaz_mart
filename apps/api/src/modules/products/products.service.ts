@@ -86,6 +86,25 @@ export class ProductsService {
     return dto;
   }
 
+  async compare(ids: string[]) {
+    const unique = [...new Set(ids)].slice(0, 4);
+    if (unique.length === 0) return [];
+
+    const products = await this.prisma.client.product.findMany({
+      where: {
+        id: { in: unique },
+        status: ProductStatus.ACTIVE,
+        deletedAt: null,
+      },
+      include: productInclude,
+    });
+    const byId = new Map(products.map((product) => [product.id, product]));
+    return unique
+      .map((id) => byId.get(id))
+      .filter((product): product is NonNullable<typeof product> => Boolean(product))
+      .map(mapProductDetail);
+  }
+
   async getRecommendations(limit = 8) {
     const cacheKey = `catalog:recommended:${limit}`;
     const cached = await this.redis.getJson<ReturnType<typeof mapProductListItem>[]>(cacheKey);

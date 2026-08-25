@@ -1,15 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShopShell } from "@/components/layout/shop-shell";
 import { ProductGrid } from "@/components/shop/product-grid";
+import { JsonLd } from "@/components/seo/json-ld";
 import { fetchVendorStore } from "@/lib/vendor/api";
+import { vendorJsonLd } from "@/lib/seo/json-ld";
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const vendor = await fetchVendorStore(slug);
   return {
     title: vendor?.name ?? "Vendor store",
     description: vendor?.description ?? undefined,
+    alternates: { canonical: `/vendors/${slug}` },
   };
 }
 
@@ -20,6 +24,7 @@ export default async function VendorStorePage({ params }: { params: Promise<{ sl
 
   return (
     <ShopShell>
+      <JsonLd data={vendorJsonLd(vendor, vendor.products ?? [])} />
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
         <div className="rounded-2xl border border-border bg-surface p-8 shadow-sm">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">

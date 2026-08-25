@@ -19,10 +19,17 @@ import { JwtPayload } from "./interfaces/jwt-payload.interface";
 
 const DEFAULT_ROLE = "customer";
 const BCRYPT_ROUNDS = 12;
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT = GOOGLE_CLIENT_ID
-  ? new OAuth2Client(GOOGLE_CLIENT_ID)
-  : null;
+const GOOGLE_PLACEHOLDER = "your-google-client-id";
+
+type UserWithRoles = {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  isActive: boolean;
+  deletedAt: Date | null;
+  roles: { role: { slug: string } }[];
+};
 
 export interface AuthTokens {
   accessToken: string;
@@ -132,71 +139,70 @@ export class AuthService {
     };
   }
 
-  async socialLogin(provider: "google", idToken: string, meta?: { userAgent?: string; ip?: string }) {
+  async loginWithGoogleCode(
+    code: string,
+    redirectUri: string,
+    meta?: { userAgent?: string; ip?: string },
+  ) {
+    const { clientId, clientSecret } = this.googleCredentials();
+    if (!clientSecret) {
+      throw new UnauthorizedException("Google OAuth is not configured");
+    }
+    this.assertGoogleRedirectUri(redirectUri);
+
+    const client = new OAuth2Client(clientId, clientSecret, redirectUri);
+    try {
+      const { tokens } = await client.getToken(code);
+      if (!tokens.id_token) {
+        throw new UnauthorizedException("Google account could not be verified");
+      }
+      return this.socialLogin("google", tokens.id_token, meta);
+    } catch (error) {
+      if (
+        error instanceof UnauthorizedException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      this.logger.warn(
+        `Google token exchange failed: ${error instanceof Error ? error.message : "unknown error"}`,
+      );
+      throw new UnauthorizedException("Google authorization failed");
+    }
+  }
+
+  async socialLogin(
+    provider: "google",
+    idToken: string,
+    meta?: { userAgent?: string; ip?: string },
+  ) {
     if (provider !== "google") {
       throw new UnauthorizedException("Unsupported provider");
     }
 
-    if (!GOOGLE_CLIENT) {
-      throw new UnauthorizedException("Google OAuth is not configured");
-    }
-
-    const ticket = await GOOGLE_CLIENT.verifyIdToken({
+    const { clientId } = this.googleCredentials();
+    const client = new OAuth2Client(clientId);
+    const ticket = await client.verifyIdToken({
       idToken,
-      audience: GOOGLE_CLIENT_ID,
+      audience: clientId,
     });
 
     const payload = ticket.getPayload();
-    if (!payload?.email || !payload.sub) {
+    if (!payload?.email || !payload.sub || payload.email_verified === false) {
       throw new UnauthorizedException("Google account could not be verified");
     }
 
-    const email = payload.email.toLowerCase();
-    let user = await this.prisma.client.user.findFirst({
-      where: { email, deletedAt: null },
-      include: { roles: { include: { role: true } } },
+    const user = await this.upsertGoogleUser({
+      provider,
+      providerUserId: payload.sub,
+      email: payload.email.toLowerCase(),
+      firstName: payload.given_name ?? null,
+      lastName: payload.family_name ?? null,
+      avatarUrl: payload.picture ?? null,
     });
 
-    if (!user) {
-      const role = await this.prisma.client.role.findUnique({
-        where: { slug: DEFAULT_ROLE },
-      });
-      if (!role) {
-        throw new ConflictException(
-          "Default role not seeded. Run: npm run db:seed",
-        );
-      }
-
-      user = await this.prisma.client.user.create({
-        data: {
-          id: uuidv7(),
-          email,
-          firstName: payload.given_name ?? null,
-          lastName: payload.family_name ?? null,
-          avatarUrl: payload.picture ?? null,
-          roles: { create: { roleId: role.id } },
-        },
-        include: { roles: { include: { role: true } } },
-      });
-      await this.customers.ensureCustomer(user.id);
-    }
-
-    const existingOAuth = await this.prisma.client.oAuthAccount.findFirst({
-      where: { provider, providerUserId: payload.sub },
-    });
-
-    if (!existingOAuth) {
-      await this.prisma.client.oAuthAccount.create({
-        data: {
-          id: uuidv7(),
-          userId: user.id,
-          provider,
-          providerUserId: payload.sub,
-        },
-      });
-    }
-
-    const roles = user.roles.map((r: { role: { slug: string } }) => r.role.slug);
+    const roles = user.roles.map((r) => r.role.slug);
+    await this.customers.ensureCustomer(user.id);
     const tokens = await this.issueTokens(user.id, user.email, roles);
 
     if (meta?.userAgent || meta?.ip) {
@@ -214,6 +220,105 @@ export class AuthService {
       user: this.toUserResponse(user),
       ...tokens,
     };
+  }
+
+  private googleCredentials() {
+    const clientId = (
+      this.config.get<string>("GOOGLE_CLIENT_ID") ??
+      this.config.get<string>("NEXT_PUBLIC_GOOGLE_CLIENT_ID") ??
+      ""
+    ).trim();
+    const clientSecret = (this.config.get<string>("GOOGLE_CLIENT_SECRET") ?? "").trim();
+
+    if (!clientId || clientId === GOOGLE_PLACEHOLDER) {
+      throw new UnauthorizedException("Google OAuth is not configured");
+    }
+
+    return { clientId, clientSecret };
+  }
+
+  private assertGoogleRedirectUri(redirectUri: string) {
+    const appUrl = (
+      this.config.get<string>("NEXT_PUBLIC_APP_URL") ??
+      this.config.get<string>("APP_URL") ??
+      "http://localhost:3000"
+    ).replace(/\/$/, "");
+    const allowed = `${appUrl}/auth/google/callback`;
+    if (redirectUri !== allowed) {
+      throw new BadRequestException("Invalid Google redirect URI");
+    }
+  }
+
+  private async upsertGoogleUser(profile: {
+    provider: "google";
+    providerUserId: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+    avatarUrl: string | null;
+  }): Promise<UserWithRoles> {
+    const oauth = await this.prisma.client.oAuthAccount.findUnique({
+      where: {
+        provider_providerUserId: {
+          provider: profile.provider,
+          providerUserId: profile.providerUserId,
+        },
+      },
+      include: {
+        user: { include: { roles: { include: { role: true } } } },
+      },
+    });
+
+    if (oauth) {
+      if (oauth.user.deletedAt || !oauth.user.isActive) {
+        throw new UnauthorizedException("This account is disabled");
+      }
+      return oauth.user;
+    }
+
+    let user = await this.prisma.client.user.findFirst({
+      where: { email: profile.email, deletedAt: null },
+      include: { roles: { include: { role: true } } },
+    });
+
+    if (user) {
+      if (!user.isActive) {
+        throw new UnauthorizedException("This account is disabled");
+      }
+    } else {
+      const role = await this.prisma.client.role.findUnique({
+        where: { slug: DEFAULT_ROLE },
+      });
+      if (!role) {
+        throw new ConflictException(
+          "Default role not seeded. Run: npm run db:seed",
+        );
+      }
+
+      user = await this.prisma.client.user.create({
+        data: {
+          id: uuidv7(),
+          email: profile.email,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          avatarUrl: profile.avatarUrl,
+          roles: { create: { roleId: role.id } },
+        },
+        include: { roles: { include: { role: true } } },
+      });
+      await this.customers.ensureCustomer(user.id);
+    }
+
+    await this.prisma.client.oAuthAccount.create({
+      data: {
+        id: uuidv7(),
+        userId: user.id,
+        provider: profile.provider,
+        providerUserId: profile.providerUserId,
+      },
+    });
+
+    return user;
   }
 
   async refresh(refreshToken: string) {

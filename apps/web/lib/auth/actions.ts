@@ -87,6 +87,7 @@ export async function registerAction(formData: FormData) {
   const password = formData.get("password") as string;
   const firstName = (formData.get("firstName") as string) || undefined;
   const lastName = (formData.get("lastName") as string) || undefined;
+  const redirectTo = safeRedirect(formData.get("redirect") as string | null);
 
   const res = await fetch(`${siteConfig.apiUrl}/auth/register`, {
     method: "POST",
@@ -98,12 +99,14 @@ export async function registerAction(formData: FormData) {
     const err = await res.json().catch(() => ({}));
     const message =
       (err as { message?: string[] }).message?.[0] ?? "Registration failed";
-    redirect(`/register?error=${encodeURIComponent(message)}`);
+    redirect(
+      `/register?error=${encodeURIComponent(message)}&redirect=${encodeURIComponent(redirectTo)}`,
+    );
   }
 
   const data = (await res.json()) as AuthResponse;
   await setAuthCookies(data);
-  redirect("/account");
+  redirect(redirectTo);
 }
 
 export async function logoutAction() {

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToCartPanel } from "@/components/product/add-to-cart-panel";
@@ -6,20 +7,36 @@ import { ProductReviews } from "@/components/product/product-reviews";
 import { WishlistButton } from "@/components/product/wishlist-button";
 import { ProductGrid } from "@/components/shop/product-grid";
 import { ShopShell } from "@/components/layout/shop-shell";
+import { JsonLd } from "@/components/seo/json-ld";
 import { fetchProduct, fetchRecommended } from "@/lib/catalog/fetch";
 import { fetchProductReviews } from "@/lib/commerce/api";
 import { getSession } from "@/lib/auth/session";
+import { getCompareIds } from "@/lib/compare/cookie";
+import { breadcrumbJsonLd, productJsonLd } from "@/lib/seo/json-ld";
+import { absoluteUrl, httpUrls } from "@/lib/seo/urls";
+import { CompareToggle } from "@/components/product/compare-toggle";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
-}) {
+}): Promise<Metadata> {
   const { slug } = await params;
   const product = await fetchProduct(slug);
+  const images = httpUrls(product?.images.map((image) => image.url) ?? []);
   return {
     title: product?.name ?? "Product",
     description: product?.shortDescription ?? undefined,
+    alternates: { canonical: `/products/${slug}` },
+    openGraph: product
+      ? {
+          type: "website",
+          title: product.name,
+          description: product.shortDescription ?? undefined,
+          url: absoluteUrl(`/products/${slug}`),
+          images: images.length > 0 ? images : undefined,
+        }
+      : undefined,
   };
 }
 
@@ -35,14 +52,24 @@ export default async function ProductPage({
   const product = await fetchProduct(slug);
   if (!product) notFound();
 
-  const [related, reviews, user] = await Promise.all([
+  const [related, reviews, user, compareIds] = await Promise.all([
     fetchRecommended(),
     fetchProductReviews(slug),
     getSession(),
+    getCompareIds(),
   ]);
 
   return (
     <ShopShell>
+      <JsonLd data={productJsonLd(product, reviews)} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Shop", path: "/shop" },
+          { name: product.category.name, path: `/categories/${product.category.slug}` },
+          { name: product.name },
+        ])}
+      />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         <nav className="mb-6 text-sm text-muted" aria-label="Breadcrumb">
           <Link href="/" className="hover:text-text">
@@ -107,6 +134,10 @@ export default async function ProductPage({
 
             <div className="mt-6 flex gap-4 text-sm">
               <WishlistButton productId={product.id} slug={product.slug} />
+              <CompareToggle
+                productId={product.id}
+                selected={compareIds.includes(product.id)}
+              />
             </div>
           </div>
         </div>

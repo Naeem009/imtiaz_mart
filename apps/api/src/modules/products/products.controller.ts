@@ -48,6 +48,17 @@ export class ProductsController {
   }
 
   @Public()
+  @Get("compare")
+  @ApiOperation({ summary: "Compare products by id" })
+  compare(@Query("ids") ids?: string) {
+    const list = (ids ?? "")
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+    return this.productsService.compare(list);
+  }
+
+  @Public()
   @Get(":slug")
   @ApiOperation({ summary: "Get product by slug" })
   findOne(@Param("slug") slug: string) {

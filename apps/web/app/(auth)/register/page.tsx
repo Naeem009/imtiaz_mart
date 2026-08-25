@@ -11,9 +11,12 @@ export const metadata = {
 export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; redirect?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, redirect: redirectTo } = await searchParams;
+  const afterAuth = redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+    ? redirectTo
+    : "/account";
 
   return (
     <div className="flex min-h-full flex-col items-center justify-center px-4 py-16">
@@ -27,6 +30,9 @@ export default async function RegisterPage({
         </div>
         <div className="rounded-xl border border-border bg-surface p-8 shadow-sm">
           <form action={registerAction} className="space-y-4">
+            {afterAuth !== "/account" && (
+              <input type="hidden" name="redirect" value={afterAuth} />
+            )}
             {error && (
               <p
                 className="rounded-lg bg-error/10 px-4 py-3 text-sm text-error"
@@ -62,7 +68,7 @@ export default async function RegisterPage({
           </div>
 
           <div className="mt-5">
-            <GoogleLoginButton redirect="/account" />
+            <GoogleLoginButton redirect={afterAuth} errorPath="/register" />
           </div>
         </div>
         <p className="mt-6 text-center text-sm text-muted">
