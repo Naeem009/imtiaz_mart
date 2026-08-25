@@ -23,8 +23,13 @@ export const metadata = {
   description: siteConfig.description,
 };
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ newsletter?: string }>;
+}) {
   const home = await loadHomePage();
+  const { newsletter } = await searchParams;
 
   return (
     <div className="flex min-h-full flex-col pb-16 md:pb-0">
@@ -97,7 +102,7 @@ export default async function HomePage() {
 
         <BlogSection posts={home.posts} />
 
-        <NewsletterSection />
+        <NewsletterSection status={newsletter} />
 
         <TrustBadges />
       </main>

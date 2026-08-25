@@ -163,4 +163,14 @@ export class CmsService {
       publishedAt: post.publishedAt?.toISOString() ?? null,
     };
   }
+
+  async subscribeNewsletter(email: string) {
+    const normalized = email.toLowerCase();
+    await this.prisma.client.newsletterSubscriber.upsert({
+      where: { email: normalized },
+      update: { unsubscribedAt: null },
+      create: { id: uuidv7(), email: normalized },
+    });
+    return { message: "You are subscribed to marketplace updates." };
+  }
 }

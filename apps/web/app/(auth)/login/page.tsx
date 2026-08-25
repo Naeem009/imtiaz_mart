@@ -11,9 +11,9 @@ export const metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; redirect?: string }>;
+  searchParams: Promise<{ error?: string; redirect?: string; notice?: string }>;
 }) {
-  const { error, redirect: redirectTo } = await searchParams;
+  const { error, redirect: redirectTo, notice } = await searchParams;
 
   return (
     <div className="flex min-h-full flex-col items-center justify-center px-4 py-16">
@@ -29,6 +29,11 @@ export default async function LoginPage({
           <form action={loginAction} className="space-y-4">
             {redirectTo && (
               <input type="hidden" name="redirect" value={redirectTo} />
+            )}
+            {notice && (
+              <p className="rounded-lg bg-success/10 px-4 py-3 text-sm text-success" role="status">
+                {decodeURIComponent(notice)}
+              </p>
             )}
             {error && (
               <p
@@ -46,6 +51,11 @@ export default async function LoginPage({
               required
               autoComplete="current-password"
             />
+            <p className="text-right">
+              <Link href="/forgot-password" className="text-sm font-medium text-accent hover:underline">
+                Forgot password?
+              </Link>
+            </p>
             <button
               type="submit"
               className="w-full rounded-lg bg-cta py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"

@@ -1,7 +1,23 @@
 "use server";
 
+import { redirect } from "next/navigation";
+import { siteConfig } from "@/config/site";
+
 export async function newsletterAction(formData: FormData) {
-  const email = formData.get("email");
-  // TODO: integrate with marketing automation / CMS
-  console.info("[newsletter] subscription:", email);
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) {
+    redirect("/?newsletter=error");
+  }
+
+  const res = await fetch(`${siteConfig.apiUrl}/newsletter`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!res.ok) {
+    redirect("/?newsletter=error");
+  }
+
+  redirect("/?newsletter=ok");
 }

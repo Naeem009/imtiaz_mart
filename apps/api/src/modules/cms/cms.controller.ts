@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { API_VERSION } from "@imtiaz-mart/shared";
-import { IsOptional, IsString, MinLength } from "class-validator";
+import { IsEmail, IsOptional, IsString, MinLength } from "class-validator";
 import { Public } from "@/common/decorators/public.decorator";
 import { Roles } from "@/common/decorators/roles.decorator";
 import { CmsService } from "./cms.service";
@@ -22,6 +22,11 @@ class UpsertPageDto {
   @IsOptional()
   @IsString()
   excerpt?: string;
+}
+
+class SubscribeNewsletterDto {
+  @IsEmail()
+  email!: string;
 }
 
 @ApiTags("cms")
@@ -76,6 +81,14 @@ export class CmsController {
   @ApiOperation({ summary: "Get a navigation menu" })
   menu(@Param("location") location: string) {
     return this.cms.getMenu(location);
+  }
+
+  @Public()
+  @Post("newsletter")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Subscribe an email to marketplace updates" })
+  subscribe(@Body() dto: SubscribeNewsletterDto) {
+    return this.cms.subscribeNewsletter(dto.email);
   }
 
   @ApiBearerAuth()
