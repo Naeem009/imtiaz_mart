@@ -21,6 +21,7 @@ export async function generateMetadata({
     alternates: { canonical: `/categories/${slug}` },
   };
 }
+import { getCompareIds } from "@/lib/compare/cookie";
 
 export default async function CategoryPage({
   params,
@@ -38,6 +39,7 @@ export default async function CategoryPage({
   if (!category) notFound();
 
   const result = await fetchCategoryProducts(slug, { page, limit: 20, sort });
+  const compareIds = await getCompareIds();
 
   return (
     <ShopShell>
@@ -61,7 +63,7 @@ export default async function CategoryPage({
           currentSort={sort}
           basePath={`/categories/${slug}`}
         />
-        <ProductGrid products={result.data} />
+        <ProductGrid products={result.data} selectedIds={compareIds} />
         <Pagination
           page={result.meta.page}
           totalPages={result.meta.totalPages}

@@ -12,6 +12,7 @@ interface HeroSliderProps {
 export function HeroSlider({ slides }: HeroSliderProps) {
   const [active, setActive] = useState(0);
   const count = slides.length;
+  const activeSlide = count > 0 ? active % count : 0;
 
   const next = useCallback(() => {
     if (count === 0) return;
@@ -23,10 +24,6 @@ export function HeroSlider({ slides }: HeroSliderProps) {
     const timer = setInterval(next, 6000);
     return () => clearInterval(timer);
   }, [next, count]);
-
-  useEffect(() => {
-    if (active >= count) setActive(0);
-  }, [active, count]);
 
   if (count === 0) return null;
 
@@ -45,7 +42,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
             aria-label={`${index + 1} of ${count}`}
             className={`absolute inset-0 transition-opacity duration-700 ${
               slide.imageUrl ? "bg-slate-900" : `bg-gradient-to-br ${slide.gradient}`
-            } ${index === active ? "opacity-100" : "pointer-events-none opacity-0"}`}
+            } ${index === activeSlide ? "opacity-100" : "pointer-events-none opacity-0"}`}
             style={
               slide.imageUrl
                 ? {
@@ -94,7 +91,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
                     : "w-2 bg-white/50 hover:bg-white/80"
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
-                aria-current={index === active}
+                aria-current={index === activeSlide}
               />
             ))}
           </div>

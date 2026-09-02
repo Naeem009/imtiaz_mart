@@ -8,19 +8,15 @@ export function useDebouncedProductSearch(query: string, limit = 8, delayMs = 20
   const [items, setItems] = useState<ProductListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const hasQuery = query.trim().length > 0;
 
   useEffect(() => {
     const q = query.trim();
-    if (!q) {
-      setItems([]);
-      setTotal(0);
-      setLoading(false);
-      return;
-    }
+    if (!q) return;
 
     const controller = new AbortController();
-    setLoading(true);
     const timer = window.setTimeout(() => {
+      setLoading(true);
       void searchProductsClient(q, limit, controller.signal)
         .then((result) => {
           setItems(result.items);
@@ -42,5 +38,9 @@ export function useDebouncedProductSearch(query: string, limit = 8, delayMs = 20
     };
   }, [query, limit, delayMs]);
 
-  return { items, total, loading };
+  return {
+    items: hasQuery ? items : [],
+    total: hasQuery ? total : 0,
+    loading: hasQuery && loading,
+  };
 }

@@ -6,6 +6,7 @@ import { ProductGrid } from "@/components/shop/product-grid";
 import { JsonLd } from "@/components/seo/json-ld";
 import { fetchVendorStore } from "@/lib/vendor/api";
 import { vendorJsonLd } from "@/lib/seo/json-ld";
+import { getCompareIds } from "@/lib/compare/cookie";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -51,7 +52,7 @@ export default async function VendorStorePage({ params }: { params: Promise<{ sl
               Browse all
             </Link>
           </div>
-          <ProductGrid products={vendor.products ?? []} />
+          <ProductGrid products={vendor.products ?? []} selectedIds={await getCompareIds()} />
         </div>
       </div>
     </ShopShell>

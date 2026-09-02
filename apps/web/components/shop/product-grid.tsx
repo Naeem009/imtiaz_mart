@@ -4,11 +4,13 @@ import { ProductCard } from "@/components/ui/product-card";
 interface ProductGridProps {
   products: ProductListItem[];
   emptyMessage?: string;
+  selectedIds?: string[];
 }
 
 export function ProductGrid({
   products,
   emptyMessage = "No products found.",
+  selectedIds = [],
 }: ProductGridProps) {
   if (!products.length) {
     return (
@@ -19,7 +21,11 @@ export function ProductGrid({
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard
+          key={product.id}
+          product={product}
+          selected={selectedIds.includes(product.id)}
+        />
       ))}
     </div>
   );

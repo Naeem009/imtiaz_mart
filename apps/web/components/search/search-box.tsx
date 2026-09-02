@@ -22,10 +22,7 @@ export function SearchBox({
   const [activeIndex, setActiveIndex] = useState(-1);
   const { items, total, loading } = useDebouncedProductSearch(query, 8);
   const showPanel = open && query.trim().length > 0;
-
-  useEffect(() => {
-    setActiveIndex(-1);
-  }, [items]);
+  const boundedActiveIndex = activeIndex < items.length ? activeIndex : -1;
 
   useEffect(() => {
     function onPointerDown(event: MouseEvent) {
@@ -52,9 +49,13 @@ export function SearchBox({
       setActiveIndex((index) => Math.max(index - 1, -1));
     } else if (event.key === "Escape") {
       setOpen(false);
-    } else if (event.key === "Enter" && activeIndex >= 0 && items[activeIndex]) {
+    } else if (
+      event.key === "Enter" &&
+      boundedActiveIndex >= 0 &&
+      items[boundedActiveIndex]
+    ) {
       event.preventDefault();
-      goToProduct(items[activeIndex].slug);
+      goToProduct(items[boundedActiveIndex].slug);
     }
   }
 
@@ -103,7 +104,7 @@ export function SearchBox({
                   <Link
                     href={`/products/${product.slug}`}
                     className={`flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-surface ${
-                      index === activeIndex ? "bg-surface" : ""
+                      index === boundedActiveIndex ? "bg-surface" : ""
                     }`}
                     onClick={() => setOpen(false)}
                   >

@@ -7,6 +7,7 @@ export const metadata = {
   title: "Deals",
   description: "Browse limited-time discounts and special offers on ATVOO",
 };
+import { getCompareIds } from "@/lib/compare/cookie";
 
 export default async function DealsPage() {
   const result = await fetchProducts({ page: 1, limit: 24, sort: "newest" });
@@ -44,7 +45,7 @@ export default async function DealsPage() {
                 <h2 className="text-xl font-semibold text-primary">Featured offers</h2>
                 <p className="text-sm text-muted">{dealProducts.length} deals available</p>
               </div>
-              <ProductGrid products={dealProducts} emptyMessage="No deals available right now." />
+              <ProductGrid products={dealProducts} selectedIds={await getCompareIds()} emptyMessage="No deals available right now." />
             </>
           ) : (
             <div className="rounded-2xl border border-border bg-surface p-8 text-center text-muted">

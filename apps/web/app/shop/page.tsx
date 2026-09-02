@@ -6,6 +6,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { fetchCategories, fetchProducts } from "@/lib/catalog/fetch";
 import { itemListJsonLd } from "@/lib/seo/json-ld";
 import Link from "next/link";
+import { getCompareIds } from "@/lib/compare/cookie";
 
 export const metadata = {
   title: "Shop",
@@ -32,6 +33,7 @@ export default async function ShopPage({
     }),
     fetchCategories(),
   ]);
+  const compareIds = await getCompareIds();
 
   return (
     <ShopShell>
@@ -74,7 +76,7 @@ export default async function ShopPage({
               currentSort={sort}
               basePath="/shop"
             />
-            <ProductGrid products={result.data} />
+            <ProductGrid products={result.data} selectedIds={compareIds} />
             <Pagination
               page={result.meta.page}
               totalPages={result.meta.totalPages}
