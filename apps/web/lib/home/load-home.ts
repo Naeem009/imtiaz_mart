@@ -35,6 +35,8 @@ const DEFAULT_HERO: HomeHeroSlide[] = [
     cta: "Shop now",
     href: "/shop",
     gradient: "from-slate-900 via-blue-900 to-slate-800",
+    imageUrl:
+      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1800&q=85",
   },
 ];
 

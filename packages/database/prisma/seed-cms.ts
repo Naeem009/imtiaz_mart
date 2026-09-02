@@ -127,26 +127,24 @@ export async function seedCms(prisma: PrismaClient) {
     });
   }
 
-  const existingBanners = await prisma.banner.count();
-  if (existingBanners === 0) {
-    const banners = [
+  const banners = [
       {
         title: "Summer collection from trusted vendors",
-        imageUrl: "from-slate-900 via-blue-900 to-slate-800",
+        imageUrl: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1800&q=85",
         href: "/shop",
         placement: "home",
         sortOrder: 0,
       },
       {
         title: "Limited-time deals on bestsellers",
-        imageUrl: "from-orange-600 via-red-600 to-rose-700",
+        imageUrl: "https://images.unsplash.com/photo-1607082349566-187342175e2f?auto=format&fit=crop&w=1800&q=85",
         href: "/deals",
         placement: "home",
         sortOrder: 1,
       },
       {
         title: "Discover verified local brands",
-        imageUrl: "from-emerald-800 via-teal-800 to-slate-900",
+        imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1800&q=85",
         href: "/vendors",
         placement: "home",
         sortOrder: 2,
@@ -158,8 +156,17 @@ export async function seedCms(prisma: PrismaClient) {
         placement: "announcement",
         sortOrder: 0,
       },
-    ];
-    for (const banner of banners) {
+  ];
+  for (const banner of banners) {
+    const existing = await prisma.banner.findFirst({
+      where: { title: banner.title, placement: banner.placement },
+    });
+    if (existing) {
+      await prisma.banner.update({
+        where: { id: existing.id },
+        data: { ...banner, active: true },
+      });
+    } else {
       await prisma.banner.create({
         data: { id: uuidv7(), ...banner, active: true },
       });

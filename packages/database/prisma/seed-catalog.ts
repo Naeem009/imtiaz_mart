@@ -44,7 +44,7 @@ const PRODUCTS = [
     categorySlug: "electronics",
     brandSlug: "sony",
     vendorSlug: "techhub-pk",
-    imageUrl: "bg-slate-200",
+    imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=85",
   },
   {
     name: "Premium Cotton Kurta",
@@ -57,7 +57,7 @@ const PRODUCTS = [
     categorySlug: "fashion",
     brandSlug: "nike",
     vendorSlug: "style-avenue",
-    imageUrl: "bg-stone-200",
+    imageUrl: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=900&q=85",
   },
   {
     name: "Smart Watch Pro Series",
@@ -68,7 +68,7 @@ const PRODUCTS = [
     categorySlug: "electronics",
     brandSlug: "apple",
     vendorSlug: "gadget-world",
-    imageUrl: "bg-zinc-200",
+    imageUrl: "https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=900&q=85",
   },
   {
     name: "Organic Skincare Set",
@@ -80,7 +80,7 @@ const PRODUCTS = [
     categorySlug: "beauty",
     brandSlug: "unilever",
     vendorSlug: "glow-naturals",
-    imageUrl: "bg-pink-200",
+    imageUrl: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=900&q=85",
   },
   {
     name: "Running Shoes Ultra",
@@ -91,7 +91,7 @@ const PRODUCTS = [
     categorySlug: "sports",
     brandSlug: "adidas",
     vendorSlug: "fitlife-store",
-    imageUrl: "bg-sky-200",
+    imageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85",
   },
   {
     name: "Stainless Steel Cookware Set",
@@ -102,7 +102,7 @@ const PRODUCTS = [
     reviewCount: 67,
     categorySlug: "home-living",
     vendorSlug: "home-essentials",
-    imageUrl: "bg-amber-200",
+    imageUrl: "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=900&q=85",
   },
   {
     name: 'LED Smart TV 55"',
@@ -115,7 +115,7 @@ const PRODUCTS = [
     categorySlug: "electronics",
     brandSlug: "samsung",
     vendorSlug: "techhub-pk",
-    imageUrl: "bg-indigo-200",
+    imageUrl: "https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=900&q=85",
   },
   {
     name: "Designer Handbag",
@@ -125,7 +125,7 @@ const PRODUCTS = [
     reviewCount: 94,
     categorySlug: "fashion",
     vendorSlug: "style-avenue",
-    imageUrl: "bg-rose-200",
+    imageUrl: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=85",
   },
 ];
 
@@ -213,7 +213,12 @@ export async function seedCatalog() {
     const existingImage = await prisma.productImage.findFirst({
       where: { productId: product.id, isPrimary: true },
     });
-    if (!existingImage) {
+    if (existingImage) {
+      await prisma.productImage.update({
+        where: { id: existingImage.id },
+        data: { url: p.imageUrl, alt: p.name },
+      });
+    } else {
       await prisma.productImage.create({
         data: {
           id: uuidv7(),
