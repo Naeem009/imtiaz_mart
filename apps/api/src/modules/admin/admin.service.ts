@@ -17,6 +17,10 @@ import { PrismaService } from "@/modules/prisma/prisma.service";
 import { CatalogSearchService } from "@/modules/search/catalog-search.service";
 import { RedisService } from "@/modules/redis/redis.module";
 
+function adminSlugify(text: string): string {
+  return text.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
 @Injectable()
 export class AdminService {
   constructor(
@@ -79,6 +83,83 @@ export class AdminService {
       createdAt: vendor.createdAt.toISOString(),
       subscriptionTier: vendor.subscription?.tier ?? "STARTER",
     }));
+  }
+
+  async listCategories() {
+    return this.prisma.client.category.findMany({
+      where: { deletedAt: null },
+      orderBy: [{ parentId: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+      include: { _count: { select: { products: { where: { deletedAt: null } } } }, parent: { select: { name: true } } },
+    });
+  }
+
+  async createCategory(data: { name: string; description?: string; imageUrl?: string; sortOrder?: number; parentId?: string }) {
+    return this.prisma.client.category.create({
+      data: {
+        name: data.name,
+        slug: `${adminSlugify(data.name)}-${Date.now().toString(36)}`,
+        description: data.description,
+        imageUrl: data.imageUrl,
+        sortOrder: data.sortOrder ?? 0,
+        parentId: data.parentId,
+      },
+    });
+  }
+
+  async updateCategory(id: string, data: { name?: string; description?: string; imageUrl?: string; sortOrder?: number; parentId?: string }) {
+    const existing = await this.prisma.client.category.findFirst({ where: { id, deletedAt: null } });
+    if (!existing) throw new NotFoundException("Category not found");
+    return this.prisma.client.category.update({
+      where: { id },
+      data: { ...data, ...(data.name ? { slug: `${adminSlugify(data.name)}-${id.slice(0, 8)}` } : {}) },
+    });
+  }
+
+  async archiveCategory(id: string) {
+    const existing = await this.prisma.client.category.findFirst({ where: { id, deletedAt: null } });
+    if (!existing) throw new NotFoundException("Category not found");
+    const productCount = await this.prisma.client.product.count({ where: { categoryId: id, deletedAt: null } });
+    if (productCount > 0) throw new NotFoundException("Move or archive this category's products first");
+    await this.prisma.client.category.update({ where: { id }, data: { deletedAt: new Date() } });
+    return { message: "Category archived" };
+  }
+
+  async createProduct(data: { name: string; categoryId: string; vendorId: string; price: number; compareAtPrice?: number; shortDescription?: string; description?: string; stock?: number; status?: ProductStatus; isEligibleSearch?: boolean; isEligibleCheckout?: boolean; imageUrl?: string }) {
+    const product = await this.prisma.client.product.create({
+      data: {
+        id: uuidv7(), name: data.name, slug: `${adminSlugify(data.name)}-${Date.now().toString(36)}`,
+        categoryId: data.categoryId, vendorId: data.vendorId, price: data.price, compareAtPrice: data.compareAtPrice,
+        shortDescription: data.shortDescription, description: data.description, status: data.status ?? ProductStatus.DRAFT,
+        isEligibleSearch: data.isEligibleSearch ?? true, isEligibleCheckout: data.isEligibleCheckout ?? false,
+        variants: { create: { id: uuidv7(), name: "Default", price: data.price, compareAtPrice: data.compareAtPrice, stock: data.stock ?? 0 } },
+        images: data.imageUrl ? { create: { id: uuidv7(), url: data.imageUrl, alt: data.name, isPrimary: true, sortOrder: 0 } } : undefined,
+      },
+    });
+    await this.search.indexById(product.id);
+    await this.redis.delByPrefix("catalog:");
+    return product;
+  }
+
+  async updateProductDetails(id: string, data: { name?: string; categoryId?: string; vendorId?: string; price?: number; compareAtPrice?: number; shortDescription?: string; description?: string; stock?: number; status?: ProductStatus; isEligibleSearch?: boolean; isEligibleCheckout?: boolean }) {
+    const existing = await this.prisma.client.product.findFirst({ where: { id, deletedAt: null }, include: { variants: true } });
+    if (!existing) throw new NotFoundException("Product not found");
+    const product = await this.prisma.client.product.update({ where: { id }, data: { name: data.name, categoryId: data.categoryId, vendorId: data.vendorId, price: data.price, compareAtPrice: data.compareAtPrice, shortDescription: data.shortDescription, description: data.description, status: data.status, isEligibleSearch: data.isEligibleSearch, isEligibleCheckout: data.isEligibleCheckout } });
+    const variant = existing.variants[0];
+    if (variant && (data.stock !== undefined || data.price !== undefined || data.compareAtPrice !== undefined)) {
+      await this.prisma.client.productVariant.update({ where: { id: variant.id }, data: { stock: data.stock, price: data.price, compareAtPrice: data.compareAtPrice } });
+    }
+    await this.search.indexById(product.id);
+    await this.redis.delByPrefix("catalog:");
+    return product;
+  }
+
+  async archiveProduct(id: string) {
+    const existing = await this.prisma.client.product.findFirst({ where: { id, deletedAt: null } });
+    if (!existing) throw new NotFoundException("Product not found");
+    await this.prisma.client.product.update({ where: { id }, data: { status: ProductStatus.ARCHIVED, deletedAt: new Date() } });
+    await this.search.remove(id);
+    await this.redis.delByPrefix("catalog:");
+    return { message: "Product archived" };
   }
 
   async updateVendor(

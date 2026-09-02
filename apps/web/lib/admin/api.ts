@@ -12,6 +12,28 @@ import type {
 } from "@imtiaz-mart/shared";
 import { authFetchJson } from "@/lib/api/auth-fetch";
 
+export type AdminCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  imageUrl: string | null;
+  sortOrder: number;
+  parentId: string | null;
+  parent: { name: string } | null;
+  _count: { products: number };
+};
+
+export type AdminCatalogVendor = { id: string; name: string };
+
+export async function fetchAdminCategories() {
+  return authFetchJson<AdminCategory[]>("/admin/categories");
+}
+
+export async function fetchAdminCatalogVendors() {
+  return authFetchJson<AdminCatalogVendor[]>("/admin/vendors");
+}
+
 export async function fetchAdminStats() {
   return authFetchJson<AdminStatsDto>("/admin/reports");
 }

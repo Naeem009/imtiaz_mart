@@ -39,6 +39,7 @@ export const vendorNav = [
 
 export const adminNav = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/catalog", label: "Catalog" },
   { href: "/admin/vendors", label: "Vendors" },
   { href: "/admin/customers", label: "Customers" },
   { href: "/admin/products", label: "Products" },

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { API_VERSION } from "@imtiaz-mart/shared";
 import { Roles } from "@/common/decorators/roles.decorator";
@@ -7,8 +7,12 @@ import { CatalogSearchService } from "@/modules/search/catalog-search.service";
 import { PaymentsService } from "@/modules/payments/payments.service";
 import { ReturnsService } from "@/modules/returns/returns.service";
 import { AdminService } from "./admin.service";
+import { CreateAdminCategoryDto } from "./dto/create-admin-category.dto";
+import { UpdateAdminCategoryDto } from "./dto/update-admin-category.dto";
+import { CreateAdminProductDto } from "./dto/create-admin-product.dto";
 import { UpdateAdminCustomerDto } from "./dto/update-admin-customer.dto";
 import { UpdateAdminProductDto } from "./dto/update-admin-product.dto";
+import { UpdateAdminProductFullDto } from "./dto/update-admin-product-full.dto";
 import { UpdateEligibilityDto } from "./dto/update-eligibility.dto";
 import { UpdatePlatformSettingsDto } from "./dto/update-platform-settings.dto";
 import { UpdateVendorStatusDto } from "./dto/update-vendor-status.dto";
@@ -44,6 +48,30 @@ export class AdminController {
     return this.admin.updateVendor(id, dto);
   }
 
+  @Get("categories")
+  @ApiOperation({ summary: "List catalog categories for administration" })
+  categories() {
+    return this.admin.listCategories();
+  }
+
+  @Post("categories")
+  @ApiOperation({ summary: "Create a catalog category" })
+  createCategory(@Body() dto: CreateAdminCategoryDto) {
+    return this.admin.createCategory(dto);
+  }
+
+  @Patch("categories/:id")
+  @ApiOperation({ summary: "Update a catalog category" })
+  updateCategory(@Param("id") id: string, @Body() dto: UpdateAdminCategoryDto) {
+    return this.admin.updateCategory(id, dto);
+  }
+
+  @Delete("categories/:id")
+  @ApiOperation({ summary: "Archive a catalog category" })
+  deleteCategory(@Param("id") id: string) {
+    return this.admin.archiveCategory(id);
+  }
+
   @Get("orders")
   @ApiOperation({ summary: "List all marketplace orders" })
   orders(@Query("page") page?: string) {
@@ -68,6 +96,24 @@ export class AdminController {
   @ApiOperation({ summary: "Update product status or agent eligibility" })
   updateProduct(@Param("id") id: string, @Body() dto: UpdateAdminProductDto) {
     return this.admin.updateProduct(id, dto);
+  }
+
+  @Post("products")
+  @ApiOperation({ summary: "Create a marketplace product" })
+  createProduct(@Body() dto: CreateAdminProductDto) {
+    return this.admin.createProduct(dto);
+  }
+
+  @Patch("products/:id/details")
+  @ApiOperation({ summary: "Update marketplace product details" })
+  updateProductDetails(@Param("id") id: string, @Body() dto: UpdateAdminProductFullDto) {
+    return this.admin.updateProductDetails(id, dto);
+  }
+
+  @Delete("products/:id")
+  @ApiOperation({ summary: "Archive a marketplace product" })
+  deleteProduct(@Param("id") id: string) {
+    return this.admin.archiveProduct(id);
   }
 
   @Get("customers")

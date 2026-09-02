@@ -129,6 +129,59 @@ export async function updateAdminProductAction(formData: FormData) {
   redirect("/admin/products");
 }
 
+export async function createAdminCategoryAction(formData: FormData) {
+  const result = await authMutateJson("/admin/categories", { method: "POST", body: JSON.stringify({
+    name: String(formData.get("name") ?? ""), description: String(formData.get("description") ?? "") || undefined,
+    imageUrl: String(formData.get("imageUrl") ?? "") || undefined, sortOrder: Number(formData.get("sortOrder") ?? 0),
+  }) });
+  if ("error" in result) fail("/admin/catalog", result.error);
+  revalidatePath("/admin/catalog"); revalidatePath("/categories"); redirect("/admin/catalog");
+}
+
+export async function updateAdminCategoryAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const result = await authMutateJson(`/admin/categories/${id}`, { method: "PATCH", body: JSON.stringify({
+    name: String(formData.get("name") ?? ""), description: String(formData.get("description") ?? "") || undefined,
+    imageUrl: String(formData.get("imageUrl") ?? "") || undefined, sortOrder: Number(formData.get("sortOrder") ?? 0),
+  }) });
+  if ("error" in result) fail("/admin/catalog", result.error);
+  revalidatePath("/admin/catalog"); revalidatePath("/categories"); redirect("/admin/catalog");
+}
+
+export async function deleteAdminCategoryAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const result = await authMutateJson(`/admin/categories/${id}`, { method: "DELETE" });
+  if ("error" in result) fail("/admin/catalog", result.error);
+  revalidatePath("/admin/catalog"); revalidatePath("/categories"); redirect("/admin/catalog");
+}
+
+export async function createAdminProductAction(formData: FormData) {
+  const result = await authMutateJson("/admin/products", { method: "POST", body: JSON.stringify({
+    name: String(formData.get("name") ?? ""), categoryId: String(formData.get("categoryId") ?? ""), vendorId: String(formData.get("vendorId") ?? ""),
+    price: Number(formData.get("price") ?? 0), stock: Number(formData.get("stock") ?? 0), status: String(formData.get("status") ?? "DRAFT"),
+    shortDescription: String(formData.get("shortDescription") ?? "") || undefined, imageUrl: String(formData.get("imageUrl") ?? "") || undefined,
+  }) });
+  if ("error" in result) fail("/admin/catalog", result.error);
+  revalidatePath("/admin/catalog"); revalidatePath("/shop"); redirect("/admin/catalog");
+}
+
+export async function updateAdminProductDetailsAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const result = await authMutateJson(`/admin/products/${id}/details`, { method: "PATCH", body: JSON.stringify({
+    name: String(formData.get("name") ?? ""), categoryId: String(formData.get("categoryId") ?? ""), price: Number(formData.get("price") ?? 0),
+    stock: Number(formData.get("stock") ?? 0), status: String(formData.get("status") ?? "DRAFT"),
+  }) });
+  if ("error" in result) fail("/admin/catalog", result.error);
+  revalidatePath("/admin/catalog"); revalidatePath("/shop"); redirect("/admin/catalog");
+}
+
+export async function deleteAdminProductAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const result = await authMutateJson(`/admin/products/${id}`, { method: "DELETE" });
+  if ("error" in result) fail("/admin/catalog", result.error);
+  revalidatePath("/admin/catalog"); revalidatePath("/shop"); redirect("/admin/catalog");
+}
+
 export async function updateAdminCustomerAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const result = await authMutateJson(`/admin/customers/${id}`, {
