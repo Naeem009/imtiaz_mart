@@ -1,0 +1,8 @@
+node_modules
+.next
+dist
+.git
+.env*
+coverage
+apps/web/.next
+packages/database/prisma/dev.db

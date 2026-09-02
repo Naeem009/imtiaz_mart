@@ -3,8 +3,11 @@ import crypto from "crypto";
 const KEY = process.env.SOCIAL_ENCRYPTION_KEY || "dev_local_change_me_32bytes_min_length!";
 
 if (KEY.length < 32) {
-  // prefer explicit failure in prod; in dev we allow fallback
-  // throw new Error("SOCIAL_ENCRYPTION_KEY must be at least 32 bytes");
+  throw new Error("SOCIAL_ENCRYPTION_KEY must be at least 32 characters");
+}
+
+if (process.env.NODE_ENV === "production" && !process.env.SOCIAL_ENCRYPTION_KEY) {
+  throw new Error("SOCIAL_ENCRYPTION_KEY is required in production");
 }
 
 export function encryptText(plaintext: string) {

@@ -35,6 +35,22 @@ import { CmsModule } from "@/modules/cms/cms.module";
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ["../../.env", ".env"],
+      validate: (config) => {
+        const isProduction = config.NODE_ENV === "production";
+        const required = ["DATABASE_URL", "JWT_SECRET", "JWT_REFRESH_SECRET"];
+        if (isProduction) {
+          required.push("APP_URL", "CORS_ORIGIN", "SOCIAL_ENCRYPTION_KEY");
+          for (const name of required) {
+            if (!config[name] || config[name].includes("change-me") || config[name].includes("localhost")) {
+              throw new Error(`${name} must be configured for production`);
+            }
+          }
+          if (config.SOCIAL_ENCRYPTION_KEY.length < 32) {
+            throw new Error("SOCIAL_ENCRYPTION_KEY must be at least 32 characters");
+          }
+        }
+        return config;
+      },
     }),
     PrismaModule,
     RedisModule,

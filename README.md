@@ -48,6 +48,37 @@ named Docker volumes.
 
 API Swagger UI: http://localhost:3001/api/docs
 
+## Production testing deployment
+
+Vercel deploys the Next.js storefront only. Deploy the API separately using
+`apps/api/Dockerfile` on a container host, and use managed PostgreSQL and Redis
+for the test environment. Elasticsearch is optional because catalog search
+falls back to PostgreSQL.
+
+Release order:
+
+```bash
+npm ci
+npm run db:migrate:deploy
+npm run db:seed
+```
+
+Set these variables in the API host:
+
+- `DATABASE_URL`, `REDIS_URL`, and optional `ELASTICSEARCH_URL`
+- `APP_URL` and `CORS_ORIGIN` (`CORS_ORIGIN` accepts comma-separated Vercel origins)
+- `JWT_SECRET`, `JWT_REFRESH_SECRET`, and `SOCIAL_ENCRYPTION_KEY` (32+ characters)
+- `API_PORT` and `NEXT_PUBLIC_APP_URL` when generating public links
+
+Set these variables in Vercel:
+
+- `NEXT_PUBLIC_API_URL` to the API URL ending in `/api/v1`
+- `NEXT_PUBLIC_APP_URL` to the Vercel deployment URL
+- `NEXT_PUBLIC_APP_NAME`
+
+Never use the demo seed password in a public environment. Run the seed only for
+an isolated testing database, then change or remove the demo accounts.
+
 ## Vercel deployment
 
 The Next.js storefront is configured for Vercel from the repository root via
