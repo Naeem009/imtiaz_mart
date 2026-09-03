@@ -8,6 +8,7 @@ import {
   Req,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import { Request } from "express";
 import { API_VERSION } from "@imtiaz-mart/shared";
 import { CurrentUser } from "@/common/decorators/current-user.decorator";
@@ -29,6 +30,7 @@ export class AuthController {
 
   @Public()
   @Post("register")
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: "Register a new customer account" })
   register(@Body() dto: RegisterDto) {
@@ -37,6 +39,7 @@ export class AuthController {
 
   @Public()
   @Post("login")
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Login with email and password" })
   login(@Body() dto: LoginDto, @Req() req: Request) {
@@ -48,6 +51,7 @@ export class AuthController {
 
   @Public()
   @Post("social-login")
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Login with a supported social provider" })
   socialLogin(@Body() dto: SocialLoginDto, @Req() req: Request) {
@@ -59,6 +63,7 @@ export class AuthController {
 
   @Public()
   @Post("google/callback")
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Complete Google OAuth with an authorization code" })
   googleCallback(@Body() dto: GoogleCallbackDto, @Req() req: Request) {
@@ -70,6 +75,7 @@ export class AuthController {
 
   @Public()
   @Post("refresh")
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Refresh access token" })
   refresh(@Body() dto: RefreshTokenDto) {
@@ -86,6 +92,7 @@ export class AuthController {
 
   @Public()
   @Post("forgot-password")
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Request password reset email" })
   forgotPassword(@Body() dto: ForgotPasswordDto) {
@@ -94,6 +101,7 @@ export class AuthController {
 
   @Public()
   @Post("reset-password")
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Reset password with token" })
   resetPassword(@Body() dto: ResetPasswordDto) {
