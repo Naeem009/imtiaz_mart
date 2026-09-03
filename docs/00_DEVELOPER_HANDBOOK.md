@@ -120,6 +120,8 @@ imtiaz_mart/
 
 **`apps/web`** owns the browser-facing experience. It uses the Next.js App Router, route groups, server components by default, client components where interaction requires them, and shared API/action helpers under `lib/`.
 
+The vendor catalog currently includes a protected product list at `/vendor/products` and an edit route at `/vendor/products/[id]/edit`. The edit form updates product name, price, compare-at price, stock, status, description, and AI-commerce eligibility through the authenticated vendor API.
+
 **`apps/api`** owns authentication, authorization, catalog, commerce, administration, integrations, and public machine-readable endpoints. Its global prefix is `/api`; URI versioning adds `/v1`, resulting in `/api/v1/...` for versioned endpoints.
 
 **`packages/database`** owns the Prisma schema, migration history, generated Prisma client access, and seed scripts. It is imported by the API and must be generated before TypeScript compilation of the database package.
@@ -503,6 +505,8 @@ Order creation must re-read prices and inventory server-side, calculate totals a
 
 Vendor owner/staff routes must verify vendor membership and permissions on every request. Product publication should validate required catalog data, media, pricing, inventory, and visibility flags. Vendor analytics must be scoped to that vendor. Payout calculations must be based on authoritative order/payment/refund state, not browser totals.
 
+The current vendor product workflow supports create, list, edit, and archive operations. The web edit form is available at `/vendor/products/[id]/edit` and uses `PATCH /api/v1/vendor/products/:id`. Vendors can edit name, descriptions, category, pricing, stock, status, primary image URL, and AI-commerce eligibility. The API scopes reads and mutations to the resolved vendor store, so a product from another vendor is returned as not found, and it validates replacement categories before updating the foreign key. Multiple variant management and an admin approval queue remain follow-up work.
+
 ### 9.5 Admin operations
 
 Admin actions are high-impact and must use RBAC, input validation, audit logging, and confirmation for destructive or financial operations. Prefer soft deletion and reversible state changes. Super-admin emergency controls should be explicit and observable.
@@ -546,7 +550,7 @@ This matrix separates the target platform from verified implementation. Recheck 
 | Catalog, categories, brands, products | Implemented/partial | Core services exist; review completeness against product-data requirements. |
 | Cart and order flows | Implemented/partial | Core routes exist; payment, stock, and failure-path coverage must be validated. |
 | Payment providers | Partial/prerequisite | Sandbox fallback and provider configuration exist; production provider contracts and reconciliation remain. |
-| Vendor portal and operations | Partial | Routes/modules exist; verify permission granularity and payout lifecycle. |
+| Vendor portal and operations | Partial | Product create/list/edit/archive plus category and primary-image editing is implemented with vendor ownership checks; multiple variants, permission granularity, and payout lifecycle remain. |
 | Admin portal | Partial | Routes/modules exist; verify all destructive actions and audit coverage. |
 | CMS | Partial | CMS module and seeded content exist; publishing workflow requires verification. |
 | Reviews, wishlist, loyalty, affiliates, returns | Partial | Modules/types exist; verify end-to-end workflows and tests. |

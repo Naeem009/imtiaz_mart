@@ -113,6 +113,15 @@ export class VendorProductsService {
       throw new NotFoundException("Product not found");
     }
 
+    if (dto.categoryId && dto.categoryId !== existing.categoryId) {
+      const category = await this.prisma.client.category.findFirst({
+        where: { id: dto.categoryId, deletedAt: null },
+      });
+      if (!category) {
+        throw new NotFoundException("Category not found");
+      }
+    }
+
     await this.prisma.client.product.update({
       where: { id },
       data: {
@@ -121,11 +130,35 @@ export class VendorProductsService {
         compareAtPrice: dto.compareAtPrice,
         shortDescription: dto.shortDescription,
         description: dto.description,
+        categoryId: dto.categoryId,
         status: dto.status,
         isEligibleSearch: dto.isEligibleSearch,
         isEligibleCheckout: dto.isEligibleCheckout,
       },
     });
+
+    if (dto.imageUrl !== undefined) {
+      const primaryImage = await this.prisma.client.productImage.findFirst({
+        where: { productId: id, isPrimary: true },
+      });
+      if (primaryImage) {
+        await this.prisma.client.productImage.update({
+          where: { id: primaryImage.id },
+          data: { url: dto.imageUrl, alt: dto.name ?? existing.name },
+        });
+      } else if (dto.imageUrl) {
+        await this.prisma.client.productImage.create({
+          data: {
+            id: uuidv7(),
+            productId: id,
+            url: dto.imageUrl,
+            alt: dto.name ?? existing.name,
+            isPrimary: true,
+            sortOrder: 0,
+          },
+        });
+      }
+    }
 
     if (dto.stock !== undefined || dto.price !== undefined) {
       const variant = existing.variants[0];
@@ -179,6 +212,8 @@ export class VendorProductsService {
     slug: string;
     price: { toNumber?: () => number } | number;
     compareAtPrice: { toNumber?: () => number } | number | null;
+    shortDescription: string | null;
+    description: string | null;
     status: string;
     rating: { toNumber?: () => number } | number;
     reviewCount: number;
@@ -195,6 +230,8 @@ export class VendorProductsService {
       slug: product.slug,
       price: toNumber(product.price),
       compareAtPrice: product.compareAtPrice ? toNumber(product.compareAtPrice) : null,
+      shortDescription: product.shortDescription,
+      description: product.description,
       status: product.status,
       stock: product.variants.reduce((sum, variant) => sum + variant.stock, 0),
       rating: toNumber(product.rating),

@@ -36,6 +36,8 @@ export interface VendorProductDto {
   slug: string;
   price: number;
   compareAtPrice: number | null;
+  shortDescription: string | null;
+  description: string | null;
   status: string;
   stock: number;
   rating: number;

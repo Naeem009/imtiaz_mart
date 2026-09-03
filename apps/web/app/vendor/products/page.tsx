@@ -6,6 +6,7 @@ import { requireRoles, VENDOR_ROLES } from "@/lib/auth/require-roles";
 import { archiveVendorProductAction } from "@/lib/vendor/actions";
 import { fetchVendorProducts } from "@/lib/vendor/api";
 import { formatPrice } from "@/lib/utils/currency";
+import Link from "next/link";
 
 export const metadata = { title: "Vendor products" };
 
@@ -62,15 +63,23 @@ export default async function VendorProductsPage({
                       {product.categoryName} · {formatPrice(product.price)} · {product.stock} in stock · {product.status}
                     </p>
                   </div>
-                  <form action={archiveVendorProductAction}>
-                    <input type="hidden" name="id" value={product.id} />
-                    <button
-                      type="submit"
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/vendor/products/${product.id}/edit`}
                       className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-primary hover:bg-background"
                     >
-                      Archive
-                    </button>
-                  </form>
+                      Edit
+                    </Link>
+                    <form action={archiveVendorProductAction}>
+                      <input type="hidden" name="id" value={product.id} />
+                      <button
+                        type="submit"
+                        className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-primary hover:bg-background"
+                      >
+                        Archive
+                      </button>
+                    </form>
+                  </div>
                 </div>
               ))
             )}

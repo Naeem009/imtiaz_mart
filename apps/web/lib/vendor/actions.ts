@@ -71,6 +71,37 @@ export async function archiveVendorProductAction(formData: FormData) {
   redirect("/vendor/products");
 }
 
+export async function updateVendorProductAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "").trim();
+  const price = Number(formData.get("price"));
+  const stock = Number(formData.get("stock"));
+  const compareAt = formData.get("compareAtPrice");
+
+  const result = await authMutateJson(`/vendor/products/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      name: String(formData.get("name") ?? "").trim(),
+      price,
+      compareAtPrice: compareAt ? Number(compareAt) : undefined,
+      shortDescription: String(formData.get("shortDescription") ?? "").trim() || undefined,
+      description: String(formData.get("description") ?? "").trim() || undefined,
+      categoryId: String(formData.get("categoryId") ?? "").trim() || undefined,
+      imageUrl: String(formData.get("imageUrl") ?? "").trim() || undefined,
+      stock,
+      status: String(formData.get("status") ?? "DRAFT"),
+      isEligibleSearch: formData.get("isEligibleSearch") === "on",
+      isEligibleCheckout: formData.get("isEligibleCheckout") === "on",
+    }),
+  });
+
+  if ("error" in result) {
+    fail(`/vendor/products/${id}/edit`, result.error);
+  }
+
+  revalidatePath("/vendor/products");
+  redirect("/vendor/products");
+}
+
 export async function connectSocialAccountAction(formData: FormData) {
   const result = await authMutateJson("/vendor/social-accounts/connect", {
     method: "POST",
