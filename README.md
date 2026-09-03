@@ -81,9 +81,11 @@ an isolated testing database, then change or remove the demo accounts.
 
 ## Vercel deployment
 
-The Next.js storefront is configured for Vercel from the repository root via
-`vercel.json`. Keep the Vercel project root at the repository root so npm
-workspaces and the root lockfile are available during the build.
+The Next.js storefront is configured for Vercel via `vercel.json`. The current
+configuration assumes the Vercel project Root Directory is `apps`; therefore
+the configured `web/.next` output resolves to `apps/web/.next`. Keep that
+Root Directory and do not set it to the repository root without also changing
+the output path and build configuration.
 
 Set these Vercel environment variables for Preview and Production:
 
@@ -131,6 +133,10 @@ provide persistent local filesystems.
 
 ## Specifications
 
+Read the [Developer Handbook](./docs/00_DEVELOPER_HANDBOOK.md) first for the
+complete setup, architecture, workflow, testing, deployment, and troubleshooting
+guide.
+
 Always read before implementing features:
 
 - [docs/01_PROJECT_MASTER_SPECIFICATION.md](./docs/01_PROJECT_MASTER_SPECIFICATION.md)
@@ -149,3 +155,5 @@ Always read before implementing features:
 | Cache | Redis |
 | Search | Elasticsearch (planned) |
 | Storage | Cloudflare R2 (planned) |
+
+See [docs/README.md](./docs/README.md) for the complete documentation index.
