@@ -4,6 +4,7 @@ import { CreateProductForm } from "@/components/vendor/create-product-form";
 import { getCategories } from "@/lib/api/catalog";
 import { requireRoles, VENDOR_ROLES } from "@/lib/auth/require-roles";
 import { archiveVendorProductAction } from "@/lib/vendor/actions";
+import { submitVendorProductAction } from "@/lib/vendor/actions";
 import { fetchVendorProducts } from "@/lib/vendor/api";
 import { formatPrice } from "@/lib/utils/currency";
 import Link from "next/link";
@@ -79,6 +80,14 @@ export default async function VendorProductsPage({
                         Archive
                       </button>
                     </form>
+                    {product.status === "DRAFT" ? (
+                      <form action={submitVendorProductAction}>
+                        <input type="hidden" name="id" value={product.id} />
+                        <button type="submit" className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90">
+                          Submit
+                        </button>
+                      </form>
+                    ) : null}
                   </div>
                 </div>
               ))

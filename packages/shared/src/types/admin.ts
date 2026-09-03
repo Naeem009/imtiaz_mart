@@ -132,6 +132,8 @@ export interface AdminProductDto {
   name: string;
   slug: string;
   status: string;
+  approvalStatus: string;
+  approvalNote: string | null;
   price: number;
   stock: number;
   vendorName: string;

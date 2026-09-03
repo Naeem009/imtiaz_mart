@@ -211,6 +211,14 @@ enum ProductStatus {
   @@map("product_status")
 }
 
+enum ProductApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@map("product_approval_status")
+}
+
 model Category {
   id          String    @id @default(uuid())
   name        String
@@ -254,6 +262,9 @@ model Product {
   compareAtPrice     Decimal?      @map("compare_at_price") @db.Decimal(12, 2)
   sku                String?
   status             ProductStatus @default(DRAFT)
+  approvalStatus     ProductApprovalStatus @default(APPROVED) @map("approval_status")
+  approvalNote       String?       @map("approval_note")
+  reviewedAt         DateTime?     @map("reviewed_at")
   isEligibleSearch   Boolean       @default(true) @map("is_eligible_search")
   isEligibleCheckout Boolean       @default(false) @map("is_eligible_checkout")
   rating             Decimal       @default(0) @db.Decimal(3, 2)

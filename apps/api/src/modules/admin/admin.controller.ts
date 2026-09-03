@@ -16,6 +16,7 @@ import { UpdateAdminProductFullDto } from "./dto/update-admin-product-full.dto";
 import { UpdateEligibilityDto } from "./dto/update-eligibility.dto";
 import { UpdatePlatformSettingsDto } from "./dto/update-platform-settings.dto";
 import { UpdateVendorStatusDto } from "./dto/update-vendor-status.dto";
+import { ReviewProductDto } from "./dto/review-product.dto";
 
 @ApiTags("admin")
 @ApiBearerAuth()
@@ -96,6 +97,18 @@ export class AdminController {
   @ApiOperation({ summary: "Update product status or agent eligibility" })
   updateProduct(@Param("id") id: string, @Body() dto: UpdateAdminProductDto) {
     return this.admin.updateProduct(id, dto);
+  }
+
+  @Post("products/:id/approve")
+  @ApiOperation({ summary: "Approve a vendor product" })
+  approveProduct(@Param("id") id: string, @Body() dto: ReviewProductDto) {
+    return this.admin.reviewProduct(id, true, dto.note);
+  }
+
+  @Post("products/:id/reject")
+  @ApiOperation({ summary: "Reject a vendor product" })
+  rejectProduct(@Param("id") id: string, @Body() dto: ReviewProductDto) {
+    return this.admin.reviewProduct(id, false, dto.note);
   }
 
   @Post("products")

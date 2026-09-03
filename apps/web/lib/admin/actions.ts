@@ -129,6 +129,29 @@ export async function updateAdminProductAction(formData: FormData) {
   redirect("/admin/products");
 }
 
+export async function approveAdminProductAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const result = await authMutateJson(`/admin/products/${id}/approve`, {
+    method: "POST",
+    body: JSON.stringify({ note: String(formData.get("note") ?? "").trim() || undefined }),
+  });
+  if ("error" in result) fail("/admin/products", result.error);
+  revalidatePath("/admin/products");
+  revalidatePath("/shop");
+  redirect("/admin/products");
+}
+
+export async function rejectAdminProductAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const result = await authMutateJson(`/admin/products/${id}/reject`, {
+    method: "POST",
+    body: JSON.stringify({ note: String(formData.get("note") ?? "").trim() || undefined }),
+  });
+  if ("error" in result) fail("/admin/products", result.error);
+  revalidatePath("/admin/products");
+  redirect("/admin/products");
+}
+
 export async function createAdminCategoryAction(formData: FormData) {
   const result = await authMutateJson("/admin/categories", { method: "POST", body: JSON.stringify({
     name: String(formData.get("name") ?? ""), description: String(formData.get("description") ?? "") || undefined,

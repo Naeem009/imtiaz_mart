@@ -505,11 +505,15 @@ Order creation must re-read prices and inventory server-side, calculate totals a
 
 Vendor owner/staff routes must verify vendor membership and permissions on every request. Product publication should validate required catalog data, media, pricing, inventory, and visibility flags. Vendor analytics must be scoped to that vendor. Payout calculations must be based on authoritative order/payment/refund state, not browser totals.
 
-The current vendor product workflow supports create, list, edit, and archive operations. The web edit form is available at `/vendor/products/[id]/edit` and uses `PATCH /api/v1/vendor/products/:id`. Vendors can edit name, descriptions, category, pricing, stock, status, primary image URL, AI-commerce eligibility, and multiple variants with names, SKUs, prices, compare-at prices, and stock. The API scopes reads and mutations to the resolved vendor store, validates replacement categories, and updates or adds variants transactionally. Existing variants are not hard-deleted because carts and orders reference them; retire an unused variant by setting its stock to zero. An admin approval queue remains follow-up work.
+The current vendor product workflow supports create, list, edit, submit, and archive operations. The web edit form is available at `/vendor/products/[id]/edit` and uses `PATCH /api/v1/vendor/products/:id`. Vendors can edit name, descriptions, category, pricing, stock, status, primary image URL, AI-commerce eligibility, and multiple variants with names, SKUs, prices, compare-at prices, and stock. Vendor-created products are always stored as `DRAFT/PENDING` even if a client requests `ACTIVE`; only the admin approval action can activate a listing. The API scopes reads and mutations to the resolved vendor store, validates replacement categories, and updates or adds variants transactionally. Existing variants are not hard-deleted because carts and orders reference them; retire an unused variant by setting its stock to zero.
 
 ### 9.5 Admin operations
 
 Admin actions are high-impact and must use RBAC, input validation, audit logging, and confirmation for destructive or financial operations. Prefer soft deletion and reversible state changes. Super-admin emergency controls should be explicit and observable.
+
+### 9.5.1 Product approval lifecycle
+
+Products have an independent `approvalStatus` (`PENDING`, `APPROVED`, or `REJECTED`), optional `approvalNote`, and `reviewedAt` timestamp in addition to the selling `status`. New vendor products enter `DRAFT/PENDING`. Vendors submit them with `POST /api/v1/vendor/products/:id/submit`. Administrators review pending listings from `/admin/products` using `POST /api/v1/admin/products/:id/approve` or `/reject`, optionally providing a note. Approval sets the product to `ACTIVE/APPROVED` and indexes it for search; rejection sets it to `DRAFT/REJECTED` and removes it from search. Public catalog visibility remains controlled by `ACTIVE` and the existing vendor/category visibility rules.
 
 ### 9.6 AI-agent commerce
 
@@ -550,7 +554,8 @@ This matrix separates the target platform from verified implementation. Recheck 
 | Catalog, categories, brands, products | Implemented/partial | Core services exist; review completeness against product-data requirements. |
 | Cart and order flows | Implemented/partial | Core routes exist; payment, stock, and failure-path coverage must be validated. |
 | Payment providers | Partial/prerequisite | Sandbox fallback and provider configuration exist; production provider contracts and reconciliation remain. |
-| Vendor portal and operations | Partial | Product create/list/edit/archive plus category, primary-image, and multiple-variant management is implemented with vendor ownership checks; variant retirement, permission granularity, approval workflow, and payout lifecycle remain. |
+| Vendor portal and operations | Partial | Product create/list/edit/archive/submit plus category, primary-image, and multiple-variant management is implemented with vendor ownership checks; variant retirement, permission granularity, and payout lifecycle remain. |
+| Admin product approval | Implemented | Products have durable approval state, vendor submission, admin approve/reject actions, review notes, timestamps, and search/cache updates. |
 | Admin portal | Partial | Routes/modules exist; verify all destructive actions and audit coverage. |
 | CMS | Partial | CMS module and seeded content exist; publishing workflow requires verification. |
 | Reviews, wishlist, loyalty, affiliates, returns | Partial | Modules/types exist; verify end-to-end workflows and tests. |

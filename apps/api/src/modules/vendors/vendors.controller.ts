@@ -104,6 +104,14 @@ export class VendorsController {
     return this.products.archive(user.sub, id);
   }
 
+  @Post("products/:id/submit")
+  @Roles("vendor", "vendor_staff")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Submit a product for admin approval" })
+  submitProduct(@CurrentUser() user: JwtPayload, @Param("id") id: string) {
+    return this.products.submitForApproval(user.sub, id);
+  }
+
   @Get("orders")
   @Roles("vendor", "vendor_staff")
   @ApiBearerAuth()

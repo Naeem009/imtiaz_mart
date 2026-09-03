@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { ProductStatus } from "@imtiaz-mart/database";
+import { ProductApprovalStatus, ProductStatus } from "@imtiaz-mart/database";
 import type { VendorProductDto } from "@imtiaz-mart/shared";
 import { v7 as uuidv7 } from "uuid";
 import { PrismaService } from "@/modules/prisma/prisma.service";
@@ -62,7 +62,8 @@ export class VendorProductsService {
         description: dto.description,
         categoryId: dto.categoryId,
         vendorId: vendor.id,
-        status: dto.status ?? ProductStatus.DRAFT,
+        status: ProductStatus.DRAFT,
+        approvalStatus: ProductApprovalStatus.PENDING,
         isEligibleSearch: dto.isEligibleSearch ?? true,
         isEligibleCheckout: dto.isEligibleCheckout ?? false,
         variants: {
@@ -115,6 +116,10 @@ export class VendorProductsService {
 
     if (!existing) {
       throw new NotFoundException("Product not found");
+    }
+
+    if (dto.status === ProductStatus.ACTIVE) {
+      dto.status = ProductStatus.DRAFT;
     }
 
     if (dto.categoryId && dto.categoryId !== existing.categoryId) {
@@ -193,6 +198,16 @@ export class VendorProductsService {
     await this.search.indexById(product.id);
     await this.redis.delByPrefix("catalog:");
     return this.mapProduct(product);
+  }
+
+  async submitForApproval(userId: string, id: string) {
+    const vendor = await this.vendors.resolveVendorForUser(userId);
+    const product = await this.prisma.client.product.findFirst({ where: { id, vendorId: vendor.id, deletedAt: null } });
+    if (!product) throw new NotFoundException("Product not found");
+    return this.prisma.client.product.update({
+      where: { id },
+      data: { status: ProductStatus.DRAFT, approvalStatus: ProductApprovalStatus.PENDING, approvalNote: null, reviewedAt: null },
+    });
   }
 
   async archive(userId: string, id: string) {

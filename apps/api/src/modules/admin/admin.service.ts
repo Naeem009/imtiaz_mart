@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { ProductStatus } from "@imtiaz-mart/database";
+import { ProductApprovalStatus, ProductStatus } from "@imtiaz-mart/database";
 import type {
   AdminCustomerDto,
   AdminOrderDto,
@@ -358,6 +358,8 @@ export class AdminService {
         name: product.name,
         slug: product.slug,
         status: product.status,
+        approvalStatus: product.approvalStatus,
+        approvalNote: product.approvalNote,
         price: Number(product.price),
         stock: product.variants.reduce((sum, variant) => sum + variant.stock, 0),
         vendorName: product.vendor.name,
@@ -417,6 +419,41 @@ export class AdminService {
       name: product.name,
       slug: product.slug,
       status: product.status,
+      approvalStatus: product.approvalStatus,
+      approvalNote: product.approvalNote,
+      price: Number(product.price),
+      stock: product.variants.reduce((sum, variant) => sum + variant.stock, 0),
+      vendorName: product.vendor.name,
+      categoryName: product.category.name,
+      isEligibleSearch: product.isEligibleSearch,
+      isEligibleCheckout: product.isEligibleCheckout,
+      createdAt: product.createdAt.toISOString(),
+    };
+  }
+
+  async reviewProduct(id: string, approved: boolean, note?: string) {
+    const existing = await this.prisma.client.product.findFirst({ where: { id, deletedAt: null } });
+    if (!existing) throw new NotFoundException("Product not found");
+    const product = await this.prisma.client.product.update({
+      where: { id },
+      data: {
+        approvalStatus: approved ? ProductApprovalStatus.APPROVED : ProductApprovalStatus.REJECTED,
+        approvalNote: note?.trim() || null,
+        reviewedAt: new Date(),
+        status: approved ? ProductStatus.ACTIVE : ProductStatus.DRAFT,
+      },
+      include: { vendor: { select: { name: true } }, category: { select: { name: true } }, variants: { select: { stock: true } } },
+    });
+    if (approved) await this.search.indexById(id);
+    else await this.search.remove(id);
+    await this.redis.delByPrefix("catalog:");
+    return {
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      status: product.status,
+      approvalStatus: product.approvalStatus,
+      approvalNote: product.approvalNote,
       price: Number(product.price),
       stock: product.variants.reduce((sum, variant) => sum + variant.stock, 0),
       vendorName: product.vendor.name,

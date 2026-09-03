@@ -3,6 +3,7 @@ import { ShopShell } from "@/components/layout/shop-shell";
 import { PortalNav, adminNav } from "@/components/layout/portal-nav";
 import { ADMIN_ROLES, requireRoles } from "@/lib/auth/require-roles";
 import { updateAdminProductAction } from "@/lib/admin/actions";
+import { approveAdminProductAction, rejectAdminProductAction } from "@/lib/admin/actions";
 import { fetchAdminProducts } from "@/lib/admin/api";
 import { formatPrice } from "@/lib/utils/currency";
 
@@ -134,6 +135,25 @@ export default async function AdminProductsPage({
                       Save
                     </button>
                   </form>
+                  {product.approvalStatus === "PENDING" ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+                      <input
+                        form={`review-${product.id}`}
+                        name="note"
+                        placeholder="Review note (optional)"
+                        className="min-w-[220px] flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                      />
+                      <form id={`review-${product.id}`} className="contents">
+                        <input type="hidden" name="id" value={product.id} />
+                      </form>
+                      <button form={`review-${product.id}`} formAction={approveAdminProductAction} className="rounded-lg bg-success px-4 py-2 text-sm font-semibold text-white">
+                        Approve
+                      </button>
+                      <button form={`review-${product.id}`} formAction={rejectAdminProductAction} className="rounded-lg border border-error px-4 py-2 text-sm font-semibold text-error">
+                        Reject
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             ))

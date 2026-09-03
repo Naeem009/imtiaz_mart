@@ -73,6 +73,14 @@ export async function archiveVendorProductAction(formData: FormData) {
   redirect("/vendor/products");
 }
 
+export async function submitVendorProductAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const result = await authMutateJson(`/vendor/products/${id}/submit`, { method: "POST" });
+  if ("error" in result) fail("/vendor/products", result.error);
+  revalidatePath("/vendor/products");
+  redirect("/vendor/products");
+}
+
 export async function updateVendorProductAction(formData: FormData) {
   const id = String(formData.get("id") ?? "").trim();
   const price = Number(formData.get("price"));
