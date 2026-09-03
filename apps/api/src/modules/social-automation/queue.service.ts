@@ -12,13 +12,12 @@ export class QueueService {
   constructor() {
     // Try to initialize BullMQ if available
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { Queue } = require("bullmq");
       const connection = { connection: { host: process.env.REDIS_HOST ?? "127.0.0.1", port: Number(process.env.REDIS_PORT ?? 6379) } };
       this.bullQueue = new Queue("social-posts", connection);
       this.useBull = true;
       this.logger.log("Using BullMQ for social automation queue");
-    } catch (err) {
+    } catch {
       this.logger.log("BullMQ not found; falling back to in-memory queue");
     }
   }
@@ -38,7 +37,6 @@ export class QueueService {
   onProcess(fn: (job: any) => Promise<void>) {
     if (this.useBull) {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const { Worker } = require("bullmq");
         // Worker will call the provided fn
         // Connection options mirror Queue above
@@ -54,7 +52,7 @@ export class QueueService {
         });
         this.logger.log("BullMQ worker started for social-posts");
         return;
-      } catch (err) {
+      } catch {
         this.logger.warn("Failed to start BullMQ worker, falling back to in-memory handlers");
       }
     }

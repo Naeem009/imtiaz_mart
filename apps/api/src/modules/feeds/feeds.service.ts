@@ -18,7 +18,6 @@ export class FeedsService {
     });
 
     return products.map((p) => {
-      const primaryImage = p.images.find((i) => i.isPrimary)?.url ?? p.images[0]?.url ?? null;
       const variant = p.variants[0];
       const availability = variant?.stock && variant.stock > 0 ? "in_stock" : "out_of_stock";
 

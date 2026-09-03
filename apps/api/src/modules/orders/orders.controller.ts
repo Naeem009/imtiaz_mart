@@ -5,10 +5,8 @@ import {
   Headers,
   Param,
   Post,
-  Req,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { Request } from "express";
 import { API_VERSION } from "@imtiaz-mart/shared";
 import { CurrentUser } from "@/common/decorators/current-user.decorator";
 import { JwtPayload } from "@/modules/auth/interfaces/jwt-payload.interface";
