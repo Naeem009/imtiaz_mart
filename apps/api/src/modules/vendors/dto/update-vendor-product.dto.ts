@@ -8,8 +8,11 @@ import {
   IsUUID,
   MaxLength,
   Min,
+  ValidateNested,
 } from "class-validator";
 import { ProductStatus } from "@imtiaz-mart/database";
+import { Type } from "class-transformer";
+import { VendorProductVariantDto } from "./create-vendor-product.dto";
 
 export class UpdateVendorProductDto {
   @ApiPropertyOptional()
@@ -72,4 +75,10 @@ export class UpdateVendorProductDto {
   @IsOptional()
   @IsBoolean()
   isEligibleCheckout?: boolean;
+
+  @ApiPropertyOptional({ type: [VendorProductVariantDto] })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => VendorProductVariantDto)
+  variants?: VendorProductVariantDto[];
 }

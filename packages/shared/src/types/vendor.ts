@@ -36,6 +36,7 @@ export interface VendorProductDto {
   slug: string;
   price: number;
   compareAtPrice: number | null;
+  variants: VendorProductVariantDto[];
   shortDescription: string | null;
   description: string | null;
   status: string;
@@ -47,4 +48,13 @@ export interface VendorProductDto {
   primaryImage: string | null;
   isEligibleSearch: boolean;
   isEligibleCheckout: boolean;
+}
+
+export interface VendorProductVariantDto {
+  id: string;
+  name: string;
+  sku: string | null;
+  price: number;
+  compareAtPrice: number | null;
+  stock: number;
 }

@@ -32,6 +32,7 @@ export async function createVendorProductAction(formData: FormData) {
   const price = Number(formData.get("price"));
   const stock = Number(formData.get("stock") || 50);
   const compareAt = formData.get("compareAtPrice");
+  const variants = parseVariants(formData.get("variants"));
 
   const result = await authMutateJson("/vendor/products", {
     method: "POST",
@@ -46,6 +47,7 @@ export async function createVendorProductAction(formData: FormData) {
       imageUrl: String(formData.get("imageUrl") ?? "").trim() || undefined,
       isEligibleSearch: formData.get("isEligibleSearch") === "on",
       isEligibleCheckout: formData.get("isEligibleCheckout") === "on",
+      variants: variants.length ? variants : undefined,
     }),
   });
 
@@ -76,6 +78,7 @@ export async function updateVendorProductAction(formData: FormData) {
   const price = Number(formData.get("price"));
   const stock = Number(formData.get("stock"));
   const compareAt = formData.get("compareAtPrice");
+  const variants = parseVariants(formData.get("variants"));
 
   const result = await authMutateJson(`/vendor/products/${id}`, {
     method: "PATCH",
@@ -91,6 +94,7 @@ export async function updateVendorProductAction(formData: FormData) {
       status: String(formData.get("status") ?? "DRAFT"),
       isEligibleSearch: formData.get("isEligibleSearch") === "on",
       isEligibleCheckout: formData.get("isEligibleCheckout") === "on",
+      variants: variants.length ? variants : undefined,
     }),
   });
 
@@ -100,6 +104,16 @@ export async function updateVendorProductAction(formData: FormData) {
 
   revalidatePath("/vendor/products");
   redirect("/vendor/products");
+}
+
+function parseVariants(value: FormDataEntryValue | null) {
+  if (typeof value !== "string" || !value) return [];
+  try {
+    const variants = JSON.parse(value);
+    return Array.isArray(variants) ? variants : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function connectSocialAccountAction(formData: FormData) {

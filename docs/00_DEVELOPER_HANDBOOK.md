@@ -505,7 +505,7 @@ Order creation must re-read prices and inventory server-side, calculate totals a
 
 Vendor owner/staff routes must verify vendor membership and permissions on every request. Product publication should validate required catalog data, media, pricing, inventory, and visibility flags. Vendor analytics must be scoped to that vendor. Payout calculations must be based on authoritative order/payment/refund state, not browser totals.
 
-The current vendor product workflow supports create, list, edit, and archive operations. The web edit form is available at `/vendor/products/[id]/edit` and uses `PATCH /api/v1/vendor/products/:id`. Vendors can edit name, descriptions, category, pricing, stock, status, primary image URL, and AI-commerce eligibility. The API scopes reads and mutations to the resolved vendor store, so a product from another vendor is returned as not found, and it validates replacement categories before updating the foreign key. Multiple variant management and an admin approval queue remain follow-up work.
+The current vendor product workflow supports create, list, edit, and archive operations. The web edit form is available at `/vendor/products/[id]/edit` and uses `PATCH /api/v1/vendor/products/:id`. Vendors can edit name, descriptions, category, pricing, stock, status, primary image URL, AI-commerce eligibility, and multiple variants with names, SKUs, prices, compare-at prices, and stock. The API scopes reads and mutations to the resolved vendor store, validates replacement categories, and updates or adds variants transactionally. Existing variants are not hard-deleted because carts and orders reference them; retire an unused variant by setting its stock to zero. An admin approval queue remains follow-up work.
 
 ### 9.5 Admin operations
 
@@ -550,7 +550,7 @@ This matrix separates the target platform from verified implementation. Recheck 
 | Catalog, categories, brands, products | Implemented/partial | Core services exist; review completeness against product-data requirements. |
 | Cart and order flows | Implemented/partial | Core routes exist; payment, stock, and failure-path coverage must be validated. |
 | Payment providers | Partial/prerequisite | Sandbox fallback and provider configuration exist; production provider contracts and reconciliation remain. |
-| Vendor portal and operations | Partial | Product create/list/edit/archive plus category and primary-image editing is implemented with vendor ownership checks; multiple variants, permission granularity, and payout lifecycle remain. |
+| Vendor portal and operations | Partial | Product create/list/edit/archive plus category, primary-image, and multiple-variant management is implemented with vendor ownership checks; variant retirement, permission granularity, approval workflow, and payout lifecycle remain. |
 | Admin portal | Partial | Routes/modules exist; verify all destructive actions and audit coverage. |
 | CMS | Partial | CMS module and seeded content exist; publishing workflow requires verification. |
 | Reviews, wishlist, loyalty, affiliates, returns | Partial | Modules/types exist; verify end-to-end workflows and tests. |

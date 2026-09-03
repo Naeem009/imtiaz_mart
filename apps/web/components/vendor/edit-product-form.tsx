@@ -1,5 +1,6 @@
 import type { CategoryListItem, VendorProductDto } from "@imtiaz-mart/shared";
 import { updateVendorProductAction } from "@/lib/vendor/actions";
+import { VariantEditor } from "./variant-editor";
 
 export function EditProductForm({
   product,
@@ -57,6 +58,8 @@ export function EditProductForm({
           />
         </div>
       </div>
+
+      <VariantEditor variants={product.variants} />
 
       <div>
         <label htmlFor="categoryId" className="mb-1.5 block text-sm font-medium text-primary">

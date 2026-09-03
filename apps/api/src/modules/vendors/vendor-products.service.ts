@@ -66,13 +66,17 @@ export class VendorProductsService {
         isEligibleSearch: dto.isEligibleSearch ?? true,
         isEligibleCheckout: dto.isEligibleCheckout ?? false,
         variants: {
-          create: {
+          create: (dto.variants?.length
+            ? dto.variants
+            : [{ name: "Default", price: dto.price, compareAtPrice: dto.compareAtPrice, stock }]
+          ).map((variant) => ({
             id: uuidv7(),
-            name: "Default",
-            price: dto.price,
-            compareAtPrice: dto.compareAtPrice,
-            stock,
-          },
+            name: variant.name,
+            sku: variant.sku,
+            price: variant.price,
+            compareAtPrice: variant.compareAtPrice,
+            stock: variant.stock ?? 0,
+          })),
         },
         images: dto.imageUrl
           ? {
@@ -122,57 +126,65 @@ export class VendorProductsService {
       }
     }
 
-    await this.prisma.client.product.update({
-      where: { id },
-      data: {
-        name: dto.name,
-        price: dto.price,
-        compareAtPrice: dto.compareAtPrice,
-        shortDescription: dto.shortDescription,
-        description: dto.description,
-        categoryId: dto.categoryId,
-        status: dto.status,
-        isEligibleSearch: dto.isEligibleSearch,
-        isEligibleCheckout: dto.isEligibleCheckout,
-      },
-    });
-
-    if (dto.imageUrl !== undefined) {
-      const primaryImage = await this.prisma.client.productImage.findFirst({
-        where: { productId: id, isPrimary: true },
+    await this.prisma.client.$transaction(async (tx) => {
+      await tx.product.update({
+        where: { id },
+        data: {
+          name: dto.name,
+          price: dto.price,
+          compareAtPrice: dto.compareAtPrice,
+          shortDescription: dto.shortDescription,
+          description: dto.description,
+          categoryId: dto.categoryId,
+          status: dto.status,
+          isEligibleSearch: dto.isEligibleSearch,
+          isEligibleCheckout: dto.isEligibleCheckout,
+        },
       });
-      if (primaryImage) {
-        await this.prisma.client.productImage.update({
-          where: { id: primaryImage.id },
-          data: { url: dto.imageUrl, alt: dto.name ?? existing.name },
-        });
-      } else if (dto.imageUrl) {
-        await this.prisma.client.productImage.create({
-          data: {
-            id: uuidv7(),
-            productId: id,
-            url: dto.imageUrl,
-            alt: dto.name ?? existing.name,
-            isPrimary: true,
-            sortOrder: 0,
-          },
-        });
-      }
-    }
 
-    if (dto.stock !== undefined || dto.price !== undefined) {
-      const variant = existing.variants[0];
-      if (variant) {
-        await this.prisma.client.productVariant.update({
-          where: { id: variant.id },
-          data: {
-            stock: dto.stock,
-            price: dto.price,
-            compareAtPrice: dto.compareAtPrice,
-          },
-        });
+      if (dto.variants?.length) {
+        const existingIds = new Set(existing.variants.map((variant) => variant.id));
+        for (const variant of dto.variants) {
+          const data = {
+            name: variant.name,
+            sku: variant.sku,
+            price: variant.price,
+            compareAtPrice: variant.compareAtPrice,
+            stock: variant.stock ?? 0,
+          };
+          if (variant.id) {
+            if (!existingIds.has(variant.id)) {
+              throw new NotFoundException("Product variant not found");
+            }
+            await tx.productVariant.update({ where: { id: variant.id }, data });
+          } else {
+            await tx.productVariant.create({ data: { id: uuidv7(), productId: id, ...data } });
+          }
+        }
+      } else if (dto.stock !== undefined || dto.price !== undefined) {
+        const variant = existing.variants[0];
+        if (variant) {
+          await tx.productVariant.update({
+            where: { id: variant.id },
+            data: { stock: dto.stock, price: dto.price, compareAtPrice: dto.compareAtPrice },
+          });
+        }
       }
-    }
+
+      if (dto.imageUrl !== undefined) {
+        const primaryImage = await tx.productImage.findFirst({ where: { productId: id, isPrimary: true } });
+        if (primaryImage) {
+          await tx.productImage.update({
+            where: { id: primaryImage.id },
+            data: { url: dto.imageUrl, alt: dto.name ?? existing.name },
+          });
+        } else if (dto.imageUrl) {
+          await tx.productImage.create({
+            data: { id: uuidv7(), productId: id, url: dto.imageUrl, alt: dto.name ?? existing.name, isPrimary: true, sortOrder: 0 },
+          });
+        }
+      }
+    });
 
     const product = await this.prisma.client.product.findUniqueOrThrow({
       where: { id },
@@ -221,7 +233,14 @@ export class VendorProductsService {
     isEligibleCheckout: boolean;
     category: { id: string; name: string };
     images: { url: string; isPrimary: boolean }[];
-    variants: { stock: number }[];
+    variants: {
+      id: string;
+      name: string;
+      sku: string | null;
+      price: { toNumber?: () => number } | number;
+      compareAtPrice: { toNumber?: () => number } | number | null;
+      stock: number;
+    }[];
   }): VendorProductDto {
     const primary = product.images.find((image) => image.isPrimary) ?? product.images[0];
     return {
@@ -230,6 +249,14 @@ export class VendorProductsService {
       slug: product.slug,
       price: toNumber(product.price),
       compareAtPrice: product.compareAtPrice ? toNumber(product.compareAtPrice) : null,
+      variants: product.variants.map((variant) => ({
+        id: variant.id,
+        name: variant.name,
+        sku: variant.sku,
+        price: toNumber(variant.price),
+        compareAtPrice: variant.compareAtPrice ? toNumber(variant.compareAtPrice) : null,
+        stock: variant.stock,
+      })),
       shortDescription: product.shortDescription,
       description: product.description,
       status: product.status,

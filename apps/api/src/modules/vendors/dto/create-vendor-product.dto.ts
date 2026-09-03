@@ -6,11 +6,49 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  ValidateNested,
   MaxLength,
   Min,
   MinLength,
 } from "class-validator";
+import { Type } from "class-transformer";
 import { ProductStatus } from "@imtiaz-mart/database";
+
+export class VendorProductVariantDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  id?: string;
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
+  name!: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  sku?: string;
+
+  @ApiProperty()
+  @IsNumber()
+  @Min(0)
+  price!: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  compareAtPrice?: number;
+
+  @ApiPropertyOptional({ default: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  stock?: number;
+}
 
 export class CreateVendorProductDto {
   @ApiProperty()
@@ -70,4 +108,10 @@ export class CreateVendorProductDto {
   @IsOptional()
   @IsString()
   imageUrl?: string;
+
+  @ApiPropertyOptional({ type: [VendorProductVariantDto] })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => VendorProductVariantDto)
+  variants?: VendorProductVariantDto[];
 }
