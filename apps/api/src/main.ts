@@ -2,10 +2,13 @@ import { ValidationPipe, VersioningType } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import * as path from "path";
+import * as express from "express";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.getHttpAdapter().getInstance().use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
   app.setGlobalPrefix("api", {
     exclude: [".well-known/(.*)", "llms.txt", "feeds/(.*)"],

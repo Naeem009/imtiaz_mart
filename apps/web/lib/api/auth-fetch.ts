@@ -71,3 +71,23 @@ export async function authMutateJson<T>(
     return { error: "Could not reach the API. Please try again." };
   }
 }
+
+export async function authUploadFile<T>(path: string, file: File): Promise<{ data: T } | { error: string }> {
+  const token = await getAccessToken();
+  if (!token) return { error: "You need to sign in again." };
+
+  try {
+    const body = new FormData();
+    body.append("file", file);
+    const response = await fetch(`${siteConfig.apiUrl}${path}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body,
+      cache: "no-store",
+    });
+    if (!response.ok) return { error: await parseError(response) };
+    return { data: await parseJson<T>(response) };
+  } catch {
+    return { error: "Could not upload the image. Please try again." };
+  }
+}

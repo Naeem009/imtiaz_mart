@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { authMutateJson } from "@/lib/api/auth-fetch";
+import { authMutateJson, authUploadFile } from "@/lib/api/auth-fetch";
 
 function fail(path: string, error: string): never {
   redirect(`${path}?error=${encodeURIComponent(error)}`);
@@ -87,6 +87,13 @@ export async function updateVendorProductAction(formData: FormData) {
   const stock = Number(formData.get("stock"));
   const compareAt = formData.get("compareAtPrice");
   const variants = parseVariants(formData.get("variants"));
+  const imageFile = formData.get("imageFile");
+  let uploadedImageUrl: string | undefined;
+  if (imageFile instanceof File && imageFile.size > 0) {
+    const upload = await authUploadFile<{ url: string }>(`/uploads/product/${id}`, imageFile);
+    if ("error" in upload) fail(`/vendor/products/${id}/edit`, upload.error);
+    uploadedImageUrl = upload.data.url;
+  }
 
   const result = await authMutateJson(`/vendor/products/${id}`, {
     method: "PATCH",
@@ -97,7 +104,7 @@ export async function updateVendorProductAction(formData: FormData) {
       shortDescription: String(formData.get("shortDescription") ?? "").trim() || undefined,
       description: String(formData.get("description") ?? "").trim() || undefined,
       categoryId: String(formData.get("categoryId") ?? "").trim() || undefined,
-      imageUrl: String(formData.get("imageUrl") ?? "").trim() || undefined,
+      imageUrl: uploadedImageUrl ?? (String(formData.get("imageUrl") ?? "").trim() || undefined),
       stock,
       status: String(formData.get("status") ?? "DRAFT"),
       isEligibleSearch: formData.get("isEligibleSearch") === "on",

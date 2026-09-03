@@ -538,6 +538,10 @@ Social automation is opt-in and subscription-gated. The intended sequence is OAu
 
 Never auto-connect accounts, auto-publish without the configured consent mode, or bypass subscription checks in the frontend.
 
+### 9.9 Image upload and storage
+
+The API accepts authenticated vendor product-image uploads at `POST /api/v1/uploads/product/:productId` using multipart field `file`. Only JPEG, PNG, WebP, and GIF files up to 5 MB are accepted. The upload is associated with the product only after vendor ownership is verified; the existing primary image is demoted transactionally and the new image becomes primary. Files are served by the API at `/uploads/<filename>` and local `uploads/` content is ignored by Git. This is a development/local-storage implementation; use durable object storage before production because container filesystems may be replaced.
+
 ---
 
 ## 10. Feature status
@@ -566,6 +570,7 @@ This matrix separates the target platform from verified implementation. Recheck 
 | Vendor social automation | Partial/prerequisite | API/UI direction exists; external OAuth/provider workers and compliance require validation. |
 | Store social channel | Planned/partial | Specification and some supporting structures exist; verify complete implementation. |
 | Notifications, support, broad analytics | Planned/partial | Data domains are specified; verify actual modules, providers, and UI before relying on them. |
+| Advanced product image upload | Implemented for local use | Authenticated vendor multipart upload, type/size validation, ownership checks, primary-image replacement, and API static serving are implemented. |
 | Durable media storage | Planned/prerequisite | Current upload behavior uses local disk; use object storage before production. |
 | Mobile apps/PWA | Planned | Product direction only unless a separate implementation is added. |
 | 80% automated test coverage | Target | Do not claim achieved without coverage output and maintained test suites. |
@@ -854,6 +859,7 @@ Keep this list current as implementation changes:
 
 - Verify complete test coverage and add missing integration/E2E suites.
 - Replace local upload storage before production media is enabled.
+- Add object-storage adapter, signed upload/download URLs, image processing, malware scanning, and cleanup for production media.
 - Complete and validate provider payment reconciliation and webhooks.
 - Complete external social publishing adapters and worker operations.
 - Validate visual-search embedding generation, pgvector queries, and response thresholds.

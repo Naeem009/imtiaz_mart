@@ -27,6 +27,20 @@ export function EditProductForm({
         />
       </div>
 
+      <div>
+        <label htmlFor="imageFile" className="mb-1.5 block text-sm font-medium text-primary">
+          Upload replacement image
+        </label>
+        <input
+          id="imageFile"
+          name="imageFile"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm"
+        />
+        <p className="mt-1 text-xs text-muted">JPEG, PNG, WebP, or GIF up to 5 MB.</p>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="price" className="mb-1.5 block text-sm font-medium text-primary">

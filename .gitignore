@@ -28,6 +28,7 @@ coverage/
 .DS_Store
 *.pem
 .vercel
+uploads/
 
 # prisma
 packages/database/prisma/migrations/**/migration_lock.toml
