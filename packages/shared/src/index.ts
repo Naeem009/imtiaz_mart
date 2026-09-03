@@ -12,6 +12,7 @@ export type {
 } from "./types/catalog";
 export type {
   VendorOrderDto,
+  VendorInventoryDto,
   VendorProductDto,
   VendorProductVariantDto,
   VendorProfileDto,

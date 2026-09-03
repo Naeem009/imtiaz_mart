@@ -475,6 +475,12 @@ Always apply tenant/ownership conditions in the query. Soft-deleted records shou
 
 Seeds should be safe to run repeatedly where possible. They are not production migrations. To rebuild local Docker data, stop services and remove only the named local volumes after confirming data is disposable, then run migrations and seed again. Never remove a shared or production volume as a troubleshooting shortcut.
 
+### 8.5 Inventory and warehouse model
+
+Vendors have one or more warehouses. `Inventory` stores a balance per warehouse and product variant, with a configurable low-stock threshold. `InventoryTransaction` records each RESTOCK, ADJUSTMENT, SALE, or RETURN movement with its delta, resulting quantity, reason, and actor. The vendor inventory page is available at `/vendor/inventory`; its API is `GET /api/v1/vendor/inventory`, `POST /api/v1/vendor/inventory/warehouses`, and `PATCH /api/v1/vendor/inventory/warehouses/:warehouseId`. Stock adjustments are vendor-scoped, reject negative balances, and synchronize the aggregate `ProductVariant.stock` used by catalog, cart, and checkout.
+
+When the first inventory view is opened for an existing vendor, the API creates a `Main warehouse` and seeds it from current variant stock so legacy catalog data remains usable. Checkout records a `SALE` transaction against the vendor's warehouse with the largest available balance and also decrements the legacy aggregate variant stock. Warehouse-level allocation and reservation across multiple warehouses remains a future refinement.
+
 ---
 
 ## 9. Business workflows
@@ -554,6 +560,7 @@ This matrix separates the target platform from verified implementation. Recheck 
 | NestJS REST API and Swagger | Implemented | `apps/api/src/main.ts`, module controllers. |
 | Prisma/PostgreSQL persistence | Implemented | Schema, migrations, generated client. |
 | Docker PostgreSQL/Redis/Elasticsearch | Implemented for local use | `docker-compose.yml`; production hosting remains separate. |
+| Detailed inventory and warehouse management | Implemented for local use | Vendor warehouses, per-variant balances, stock adjustments, low-stock thresholds, transaction history, and checkout sale synchronization are implemented. Reservations, transfers, alerts, and multi-warehouse allocation remain follow-up work. |
 | Authentication and JWT/RBAC guards | Partial | Core modules exist; production OAuth/operational hardening requires verification. |
 | Catalog, categories, brands, products | Implemented/partial | Core services exist; review completeness against product-data requirements. |
 | Cart and order flows | Implemented/partial | Core routes exist; payment, stock, and failure-path coverage must be validated. |

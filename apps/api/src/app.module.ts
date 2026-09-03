@@ -30,6 +30,7 @@ import { AffiliatesModule } from "@/modules/affiliates/affiliates.module";
 import { ReturnsModule } from "@/modules/returns/returns.module";
 import { PaymentsModule } from "@/modules/payments/payments.module";
 import { CmsModule } from "@/modules/cms/cms.module";
+import { InventoryModule } from "@/modules/inventory/inventory.module";
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { CmsModule } from "@/modules/cms/cms.module";
     ReturnsModule,
     PaymentsModule,
     CmsModule,
+    InventoryModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

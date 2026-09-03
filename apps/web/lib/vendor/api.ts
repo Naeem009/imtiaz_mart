@@ -9,6 +9,7 @@ import type {
   VendorAnalyticsDto,
   VendorOrderDto,
   VendorProductDto,
+  VendorInventoryDto,
   VendorPayoutDto,
   VendorProfileDto,
 } from "@imtiaz-mart/shared";
@@ -21,6 +22,10 @@ export async function fetchVendorProfile() {
 
 export async function fetchVendorProducts() {
   return authFetchJson<VendorProductDto[]>("/vendor/products");
+}
+
+export async function fetchVendorInventory() {
+  return authFetchJson<{ warehouses: Array<{ id: string; name: string; city: string | null; country: string }>; items: VendorInventoryDto[] }>("/vendor/inventory");
 }
 
 export async function fetchVendorOrders(page = 1) {

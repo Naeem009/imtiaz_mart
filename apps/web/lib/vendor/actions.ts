@@ -81,6 +81,38 @@ export async function submitVendorProductAction(formData: FormData) {
   redirect("/vendor/products");
 }
 
+export async function createVendorWarehouseAction(formData: FormData) {
+  const result = await authMutateJson("/vendor/inventory/warehouses", {
+    method: "POST",
+    body: JSON.stringify({
+      name: String(formData.get("name") ?? "").trim(),
+      city: String(formData.get("city") ?? "").trim() || undefined,
+      country: String(formData.get("country") ?? "PK").trim() || "PK",
+    }),
+  });
+  if ("error" in result) fail("/vendor/inventory", result.error);
+  revalidatePath("/vendor/inventory");
+  redirect("/vendor/inventory");
+}
+
+export async function adjustVendorInventoryAction(formData: FormData) {
+  const warehouseId = String(formData.get("warehouseId") ?? "");
+  const result = await authMutateJson(`/vendor/inventory/warehouses/${warehouseId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      variantId: String(formData.get("variantId") ?? ""),
+      delta: Number(formData.get("delta") ?? 0),
+      type: String(formData.get("type") ?? "ADJUSTMENT"),
+      reason: String(formData.get("reason") ?? "").trim() || undefined,
+      lowStockThreshold: Number(formData.get("lowStockThreshold") ?? 5),
+    }),
+  });
+  if ("error" in result) fail("/vendor/inventory", result.error);
+  revalidatePath("/vendor/inventory");
+  revalidatePath("/vendor/products");
+  redirect("/vendor/inventory");
+}
+
 export async function updateVendorProductAction(formData: FormData) {
   const id = String(formData.get("id") ?? "").trim();
   const price = Number(formData.get("price"));

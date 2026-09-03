@@ -31,6 +31,7 @@ export function PortalNav({ current, links }: PortalNavProps) {
 export const vendorNav = [
   { href: "/vendor", label: "Dashboard" },
   { href: "/vendor/products", label: "Products" },
+  { href: "/vendor/inventory", label: "Inventory" },
   { href: "/vendor/orders", label: "Orders" },
   { href: "/vendor/analytics", label: "Analytics" },
   { href: "/vendor/social-automation", label: "Social" },

@@ -58,3 +58,13 @@ export interface VendorProductVariantDto {
   compareAtPrice: number | null;
   stock: number;
 }
+
+export interface VendorInventoryDto {
+  id: string;
+  warehouseId: string;
+  variantId: string;
+  quantity: number;
+  lowStockThreshold: number;
+  warehouse: { id: string; name: string; city: string | null; country: string };
+  variant: { id: string; name: string; product: { id: string; name: string; slug: string } };
+}

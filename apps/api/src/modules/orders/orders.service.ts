@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { OrderStatus, PaymentStatus } from "@imtiaz-mart/database";
+import { InventoryTransactionType, OrderStatus, PaymentStatus } from "@imtiaz-mart/database";
 import type { OrderDto } from "@imtiaz-mart/shared";
 import { v7 as uuidv7 } from "uuid";
 import { PrismaService } from "@/modules/prisma/prisma.service";
@@ -138,6 +138,30 @@ export class OrdersService {
       }
 
       for (const item of cartRecord.items) {
+        const warehouseInventory = await tx.inventory.findFirst({
+          where: {
+            variantId: item.variantId,
+            warehouse: { vendorId: item.product.vendorId, isActive: true },
+            quantity: { gte: item.quantity },
+          },
+          orderBy: { quantity: "desc" },
+        });
+        if (warehouseInventory) {
+          const updatedInventory = await tx.inventory.update({
+            where: { id: warehouseInventory.id },
+            data: { quantity: { decrement: item.quantity } },
+          });
+          await tx.inventoryTransaction.create({
+            data: {
+              id: uuidv7(),
+              inventoryId: updatedInventory.id,
+              type: InventoryTransactionType.SALE,
+              delta: -item.quantity,
+              quantity: updatedInventory.quantity,
+              reason: `Order ${orderNumber}`,
+            },
+          });
+        }
         await tx.productVariant.update({
           where: { id: item.variantId },
           data: { stock: { decrement: item.quantity } },
