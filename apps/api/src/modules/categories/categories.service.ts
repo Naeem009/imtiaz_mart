@@ -20,7 +20,12 @@ export class CategoriesService {
         _count: {
           select: {
             products: {
-              where: { status: ProductStatus.ACTIVE, deletedAt: null },
+              where: {
+                status: ProductStatus.ACTIVE,
+                deletedAt: null,
+                category: { deletedAt: null },
+                vendor: { deletedAt: null, isActive: true, isVerified: true },
+              },
             },
           },
         },
@@ -43,7 +48,12 @@ export class CategoriesService {
         _count: {
           select: {
             products: {
-              where: { status: ProductStatus.ACTIVE, deletedAt: null },
+              where: {
+                status: ProductStatus.ACTIVE,
+                deletedAt: null,
+                category: { deletedAt: null },
+                vendor: { deletedAt: null, isActive: true, isVerified: true },
+              },
             },
           },
         },

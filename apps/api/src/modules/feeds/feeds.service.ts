@@ -7,7 +7,12 @@ export class FeedsService {
 
   async getUcpFeed() {
     const products = await this.prisma.client.product.findMany({
-      where: { status: "ACTIVE", deletedAt: null },
+      where: {
+        status: "ACTIVE",
+        deletedAt: null,
+        category: { deletedAt: null },
+        vendor: { deletedAt: null, isActive: true, isVerified: true },
+      },
       include: {
         images: true,
         variants: true,

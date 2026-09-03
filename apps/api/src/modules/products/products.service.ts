@@ -18,6 +18,12 @@ const productInclude = {
   variants: true,
 };
 
+const visibleVendor = {
+  deletedAt: null,
+  isActive: true,
+  isVerified: true,
+};
+
 @Injectable()
 export class ProductsService {
   constructor(
@@ -73,6 +79,8 @@ export class ProductsService {
         slug,
         status: ProductStatus.ACTIVE,
         deletedAt: null,
+        category: { deletedAt: null },
+        vendor: visibleVendor,
       },
       include: productInclude,
     });
@@ -95,6 +103,8 @@ export class ProductsService {
         id: { in: unique },
         status: ProductStatus.ACTIVE,
         deletedAt: null,
+        category: { deletedAt: null },
+        vendor: visibleVendor,
       },
       include: productInclude,
     });
@@ -111,7 +121,12 @@ export class ProductsService {
     if (cached) return cached;
 
     const products = await this.prisma.client.product.findMany({
-      where: { status: ProductStatus.ACTIVE, deletedAt: null },
+      where: {
+        status: ProductStatus.ACTIVE,
+        deletedAt: null,
+        category: { deletedAt: null },
+        vendor: visibleVendor,
+      },
       include: productInclude,
       orderBy: [{ rating: "desc" }, { reviewCount: "desc" }],
       take: limit,
@@ -129,6 +144,8 @@ export class ProductsService {
     const where: Prisma.ProductWhereInput = {
       status: ProductStatus.ACTIVE,
       deletedAt: null,
+      category: { deletedAt: null },
+      vendor: visibleVendor,
     };
 
     if (query.q) {
