@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useState } from "react";
 import type { PaginatedProducts, ProductListItem } from "@imtiaz-mart/shared";
 import { ProductGrid } from "@/components/shop/product-grid";
@@ -171,7 +172,14 @@ export function VisualSearchPanel() {
             <div className="mt-4">
               <p className="text-sm text-muted mb-2">Preview</p>
               <div className="max-w-xs overflow-hidden rounded-lg">
-                <img src={previewUrl} alt="upload preview" className="w-full object-cover" />
+                <Image
+                  src={previewUrl}
+                  alt="upload preview"
+                  width={320}
+                  height={240}
+                  unoptimized
+                  className="h-auto w-full object-cover"
+                />
               </div>
               <div className="mt-2">
                 <button

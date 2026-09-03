@@ -163,7 +163,7 @@ export default async function ProductPage({
           </h2>
           <ProductGrid
             products={related.filter((p) => p.slug !== slug).slice(0, 4)}
-            selectedIds={await getCompareIds()}
+            selectedIds={compareIds}
           />
         </section>
       </div>

@@ -82,8 +82,6 @@ export default async function CheckoutPage({
         <CheckoutForm
           user={user}
           addresses={addresses}
-          subtotal={cart.subtotal}
-          shipping={shipping}
           total={total}
           affiliateCode={affiliateCode}
         />

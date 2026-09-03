@@ -75,6 +75,7 @@ export default async function ShopPage({
               total={result.meta.total}
               currentSort={sort}
               basePath="/shop"
+              query={{ category: params.category, brand: params.brand }}
             />
             <ProductGrid products={result.data} selectedIds={compareIds} />
             <Pagination

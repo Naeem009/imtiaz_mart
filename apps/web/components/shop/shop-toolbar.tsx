@@ -13,6 +13,7 @@ interface ShopToolbarProps {
   currentSort: string;
   basePath: string;
   searchQuery?: string;
+  query?: Record<string, string | undefined>;
 }
 
 export function ShopToolbar({
@@ -20,6 +21,7 @@ export function ShopToolbar({
   currentSort,
   basePath,
   searchQuery,
+  query = {},
 }: ShopToolbarProps) {
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -36,6 +38,9 @@ export function ShopToolbar({
         <span className="text-sm text-muted">Sort:</span>
         {SORT_OPTIONS.map((opt) => {
           const params = new URLSearchParams();
+          Object.entries(query).forEach(([key, value]) => {
+            if (value) params.set(key, value);
+          });
           if (searchQuery) params.set("q", searchQuery);
           if (opt.value !== "newest") params.set("sort", opt.value);
           const href = params.toString()

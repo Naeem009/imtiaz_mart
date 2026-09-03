@@ -5,8 +5,6 @@ import { formatPrice } from "@/lib/utils/currency";
 interface CheckoutFormProps {
   user: AuthUser;
   addresses: CustomerAddressDto[];
-  subtotal: number;
-  shipping: number;
   total: number;
   affiliateCode?: string;
 }
@@ -14,8 +12,6 @@ interface CheckoutFormProps {
 export function CheckoutForm({
   user,
   addresses,
-  subtotal,
-  shipping,
   total,
   affiliateCode,
 }: CheckoutFormProps) {
