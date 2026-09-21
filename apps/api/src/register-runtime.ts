@@ -35,6 +35,10 @@ if (!process.env.DIRECT_URL) {
 process.env.JWT_SECRET ??= "b616b532ef81f72bf85200ca3526a51e01112e873eb0532028cf915b87763330";
 process.env.JWT_REFRESH_SECRET ??= "a75895cb955942bf4d13f5269dbff59b2f309db839fedd8e7581ef7a7aa45523";
 process.env.SOCIAL_ENCRYPTION_KEY ??= "59dbc2485c5898012327d18fb68196eaa52ff59983f2b4fd2648f6901828dfa8";
+process.env.DATABASE_URL ??=
+  "postgresql://postgres.lrkotacbbtcpteqinpce:Naeem%2A123%2A456@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1&sslmode=require";
+process.env.DIRECT_URL ??=
+  "postgresql://postgres.lrkotacbbtcpteqinpce:Naeem%2A123%2A456@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require";
 
 const nodeModule = Module as unknown as {
   _resolveFilename: (

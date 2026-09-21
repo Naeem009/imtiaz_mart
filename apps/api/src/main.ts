@@ -59,7 +59,7 @@ async function bootstrap() {
   });
 
   const config = app.get(ConfigService);
-  const port = Number(process.env.PORT ?? config.get("API_PORT") ?? 3001);
+  const port = Number(process.env.PORT ?? config.get("API_PORT") ?? 3000);
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle("ATVOO API")

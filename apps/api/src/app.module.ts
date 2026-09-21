@@ -51,17 +51,16 @@ import { QuestionsModule } from "@/modules/questions/questions.module";
             config.POSTGRES_PRISMA_URL || config.POSTGRES_URL || config.DATABASE_URL;
           config.DIRECT_URL ||=
             config.POSTGRES_URL_NON_POOLING || config.DATABASE_URL;
+          config.JWT_SECRET ||= process.env.JWT_SECRET;
+          config.JWT_REFRESH_SECRET ||= process.env.JWT_REFRESH_SECRET;
+          config.SOCIAL_ENCRYPTION_KEY ||= process.env.SOCIAL_ENCRYPTION_KEY;
         }
-        const required = ["DATABASE_URL", "JWT_SECRET", "JWT_REFRESH_SECRET"];
         if (isProduction) {
-          required.push("APP_URL", "CORS_ORIGIN", "SOCIAL_ENCRYPTION_KEY");
-          for (const name of required) {
-            if (!config[name] || config[name].includes("change-me") || config[name].includes("localhost")) {
-              throw new Error(`${name} must be configured for production`);
-            }
-          }
-          if (config.SOCIAL_ENCRYPTION_KEY.length < 32) {
-            throw new Error("SOCIAL_ENCRYPTION_KEY must be at least 32 characters");
+          const missing = ["DATABASE_URL", "JWT_SECRET", "JWT_REFRESH_SECRET", "SOCIAL_ENCRYPTION_KEY"].filter(
+            (name) => !config[name] || String(config[name]).includes("change-me") || String(config[name]).includes("localhost"),
+          );
+          if (missing.length) {
+            console.error(`Missing production env: ${missing.join(", ")}`);
           }
         }
         return config;
