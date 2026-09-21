@@ -31,12 +31,16 @@ import { ReturnsModule } from "@/modules/returns/returns.module";
 import { PaymentsModule } from "@/modules/payments/payments.module";
 import { CmsModule } from "@/modules/cms/cms.module";
 import { InventoryModule } from "@/modules/inventory/inventory.module";
+import { QuestionsModule } from "@/modules/questions/questions.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ["../../.env", ".env"],
+      envFilePath:
+        process.env.NODE_ENV === "production"
+          ? [".env.production", "../../.env.production", "../../.env", ".env"]
+          : ["../../.env", ".env"],
       validate: (config) => {
         const isProduction = config.NODE_ENV === "production";
         const required = ["DATABASE_URL", "JWT_SECRET", "JWT_REFRESH_SECRET"];
@@ -86,6 +90,7 @@ import { InventoryModule } from "@/modules/inventory/inventory.module";
     PaymentsModule,
     CmsModule,
     InventoryModule,
+    QuestionsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

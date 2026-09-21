@@ -180,6 +180,71 @@ async function seedPlatformSettings() {
   console.log("Seeded platform settings");
 }
 
+async function seedProductQuestions() {
+  const product = await prisma.product.findUnique({
+    where: { slug: "wireless-noise-cancel-headphones" },
+  });
+  const customerUser = await prisma.user.findUnique({
+    where: { email: "customer@example.com" },
+  });
+  const vendorUser = await prisma.user.findUnique({
+    where: { email: "vendor@example.com" },
+  });
+  if (!product || !customerUser || !vendorUser) return;
+
+  await prisma.vendorStaff.upsert({
+    where: { vendorId_userId: { vendorId: product.vendorId, userId: vendorUser.id } },
+    update: {},
+    create: { id: uuidv7(), vendorId: product.vendorId, userId: vendorUser.id, title: "Support" },
+  });
+
+  const customer =
+    (await prisma.customer.findUnique({ where: { userId: customerUser.id } })) ??
+    (await prisma.customer.create({
+      data: { id: uuidv7(), userId: customerUser.id },
+    }));
+
+  const fromVendor = Boolean(
+    await prisma.vendor.findFirst({
+      where: {
+        id: product.vendorId,
+        OR: [{ ownerId: vendorUser.id }, { staff: { some: { userId: vendorUser.id } } }],
+      },
+    }),
+  );
+
+  const existing = await prisma.productQuestion.findFirst({
+    where: { productId: product.id, customerId: customer.id },
+  });
+  if (existing) {
+    await prisma.productAnswer.updateMany({
+      where: { questionId: existing.id, userId: vendorUser.id },
+      data: { fromVendor },
+    });
+    console.log("Product questions already seeded");
+    return;
+  }
+
+  const question = await prisma.productQuestion.create({
+    data: {
+      id: uuidv7(),
+      productId: product.id,
+      customerId: customer.id,
+      body: "Does this include a charging case and how long does the battery last?",
+    },
+  });
+  await prisma.productAnswer.create({
+    data: {
+      id: uuidv7(),
+      questionId: question.id,
+      userId: vendorUser.id,
+      fromVendor,
+      body: "Yes, a charging case is included. Playback is about 30 hours, or 6 hours per charge plus extra from the case.",
+    },
+  });
+  console.log("Seeded product questions");
+}
+
 async function main() {
   for (const role of ROLES) {
     await prisma.role.upsert({
@@ -194,6 +259,7 @@ async function main() {
   await seedCatalog();
   await seedCms(prisma);
   await seedPlatformSettings();
+  await seedProductQuestions();
 }
 
 main()

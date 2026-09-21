@@ -31,12 +31,26 @@ async function bootstrap() {
     .map((origin) => origin.trim())
     .filter(Boolean);
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+        callback(null, true);
+        return;
+      }
+      try {
+        if (new URL(origin).hostname.endsWith(".vercel.app")) {
+          callback(null, true);
+          return;
+        }
+      } catch {
+        // ignore invalid origin
+      }
+      callback(new Error(`Origin ${origin} is not allowed by CORS`));
+    },
     credentials: true,
   });
 
   const config = app.get(ConfigService);
-  const port = config.get<number>("API_PORT", 3001);
+  const port = Number(process.env.PORT ?? config.get("API_PORT") ?? 3001);
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle("ATVOO API")

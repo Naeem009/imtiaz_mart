@@ -4,6 +4,7 @@ import type {
   FaqDto,
   ProductDetail,
   ProductListItem,
+  ProductQuestionDto,
   PublicVendorDto,
   ReviewDto,
 } from "@imtiaz-mart/shared";
@@ -256,5 +257,40 @@ export function faqJsonLd(faqs: FaqDto[]): JsonLdNode | null {
         text: faq.answer,
       },
     })),
+  };
+}
+
+export function qaPageJsonLd(questions: ProductQuestionDto[]): JsonLdNode | null {
+  const answered = questions.filter((question) => question.answers.length > 0);
+  if (answered.length === 0) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "QAPage",
+    mainEntity: answered.map((question) =>
+      compact({
+        "@type": "Question",
+        name: question.body,
+        text: question.body,
+        answerCount: question.answers.length,
+        author: { "@type": "Person", name: question.authorName },
+        dateCreated: question.createdAt,
+        acceptedAnswer: question.answers[0]
+          ? compact({
+              "@type": "Answer",
+              text: question.answers[0].body,
+              author: { "@type": "Person", name: question.answers[0].authorName },
+              dateCreated: question.answers[0].createdAt,
+            })
+          : undefined,
+        suggestedAnswer: question.answers.slice(1).map((answer) =>
+          compact({
+            "@type": "Answer",
+            text: answer.body,
+            author: { "@type": "Person", name: answer.authorName },
+            dateCreated: answer.createdAt,
+          }),
+        ),
+      }),
+    ),
   };
 }

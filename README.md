@@ -65,7 +65,7 @@ npm run db:seed
 
 Set these variables in the API host:
 
-- `DATABASE_URL`, `REDIS_URL`, and optional `ELASTICSEARCH_URL`
+- `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, and optional `ELASTICSEARCH_URL`
 - `APP_URL` and `CORS_ORIGIN` (`CORS_ORIGIN` accepts comma-separated Vercel origins)
 - `JWT_SECRET`, `JWT_REFRESH_SECRET`, and `SOCIAL_ENCRYPTION_KEY` (32+ characters)
 - `API_PORT` and `NEXT_PUBLIC_APP_URL` when generating public links
@@ -81,23 +81,34 @@ an isolated testing database, then change or remove the demo accounts.
 
 ## Vercel deployment
 
-The Next.js storefront is configured for Vercel via `vercel.json`. The current
-configuration assumes the Vercel project Root Directory is `apps`; therefore
-the configured `web/.next` output resolves to `apps/web/.next`. Keep that
-Root Directory and do not set it to the repository root without also changing
-the output path and build configuration.
+Use **two** Vercel projects from the same GitHub repo:
 
-Set these Vercel environment variables for Preview and Production:
+| Project | Root Directory | Config | Public URL |
+| --- | --- | --- | --- |
+| `imtiaz-mart` (storefront) | repository root (or `apps`) | `vercel.json` / `apps/vercel.json` | `https://imtiaz-mart.vercel.app` |
+| `imtiaz-mart-api` (NestJS) | `apps/api` | `apps/api/vercel.json` | `https://imtiaz-mart-api.vercel.app` |
 
-- `NEXT_PUBLIC_APP_URL` — the deployed storefront URL
-- `NEXT_PUBLIC_API_URL` — the deployed API URL ending in `/api/v1`
-- `NEXT_PUBLIC_APP_NAME` — the public application name
+Enable **Include source files outside of the Root Directory** on the API project.
 
-Deploy the NestJS API separately on a service that supports long-running Node
-processes. Configure its `DATABASE_URL`, `REDIS_URL`, `ELASTICSEARCH_URL`,
-`APP_URL`, `CORS_ORIGIN`, `JWT_SECRET`, and `JWT_REFRESH_SECRET` values there.
-The API and its PostgreSQL, Redis, and Elasticsearch services must be reachable
-from the deployed API. Do not use the local Docker URLs in production.
+Storefront env (Production + Preview):
+
+- `NEXT_PUBLIC_APP_URL` = `https://imtiaz-mart.vercel.app`
+- `NEXT_PUBLIC_API_URL` = `https://imtiaz-mart-api.vercel.app/api/v1`
+- `NEXT_PUBLIC_APP_NAME` = `ATVOO`
+
+These public values are also in `apps/web/.env.production` so a production build embeds them.
+
+API env (Production + Preview):
+
+- `DATABASE_URL` / `DIRECT_URL` — Supabase (integration may set `DATABASE_URL`; still add `DIRECT_URL`)
+- `APP_URL` = `https://imtiaz-mart.vercel.app`
+- `API_URL` = `https://imtiaz-mart-api.vercel.app`
+- `CORS_ORIGIN` = `https://imtiaz-mart.vercel.app`
+- `JWT_SECRET`, `JWT_REFRESH_SECRET`, `SOCIAL_ENCRYPTION_KEY` (32+ chars, not `change-me`)
+
+Public API URLs are in `apps/api/.env.production`. Do not put database passwords or JWT secrets in git.
+
+After deploy, check `https://imtiaz-mart-api.vercel.app/api/v1/health` and the storefront homepage.
 
 The current upload endpoint writes to local disk for development. Before
 enabling production uploads, replace it with durable object storage such as

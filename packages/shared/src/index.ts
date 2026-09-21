@@ -28,6 +28,8 @@ export type {
   FaqDto,
   MenuDto,
   PaymentDto,
+  ProductAnswerDto,
+  ProductQuestionDto,
   ReturnRequestDto,
   ReviewDto,
   RewardAccountDto,

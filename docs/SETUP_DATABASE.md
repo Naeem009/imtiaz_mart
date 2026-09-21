@@ -35,6 +35,27 @@ npm run db:migrate:status
 
 ## Without Docker
 
-Point `DATABASE_URL` in the repo-root `.env` to any PostgreSQL 17+ instance, then run migrate and seed.
+Point `DATABASE_URL` and `DIRECT_URL` in the repo-root `.env` to any PostgreSQL 17+ instance, then run migrate and seed.
 
 Prisma CLI commands (`db:migrate`, `db:migrate:deploy`, `db:migrate:status`) run from the repo root so they pick up that `.env`.
+
+## Supabase
+
+Prisma uses two URLs:
+
+- `DATABASE_URL` — transaction pooler (`:6543`, `pgbouncer=true`) for the NestJS API
+- `DIRECT_URL` — session pooler or direct connection (`:5432`) for `prisma migrate`
+
+Copy both from **Project Settings → Database**. Keep `schema=public` (default on Supabase). Then:
+
+```bash
+npm run db:migrate:deploy
+```
+
+Enable the vector extension in the Supabase SQL editor if embeddings are used:
+
+```sql
+create extension if not exists vector;
+```
+
+Do not commit the database password. Local Docker URLs stay valid when both env vars still point at `localhost:5432`.

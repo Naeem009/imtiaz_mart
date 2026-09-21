@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   addWishlistApi,
+  createAnswerApi,
+  createQuestionApi,
   createReturnApi,
   createReviewApi,
   registerAffiliateApi,
@@ -43,6 +45,34 @@ export async function createReviewAction(formData: FormData) {
   });
   if ("error" in result) {
     redirect(`/products/${slug}?error=${encodeURIComponent(result.error)}`);
+  }
+  revalidatePath(`/products/${slug}`);
+  redirect(`/products/${slug}`);
+}
+
+export async function askProductQuestionAction(formData: FormData) {
+  const productId = String(formData.get("productId") ?? "");
+  const slug = String(formData.get("slug") ?? "");
+  const result = await createQuestionApi({
+    productId,
+    body: String(formData.get("body") ?? ""),
+  });
+  if ("error" in result) {
+    if (result.error.toLowerCase().includes("sign in")) {
+      redirect(`/login?redirect=${encodeURIComponent(`/products/${slug}`)}`);
+    }
+    redirect(`/products/${slug}?qaError=${encodeURIComponent(result.error)}`);
+  }
+  revalidatePath(`/products/${slug}`);
+  redirect(`/products/${slug}`);
+}
+
+export async function answerProductQuestionAction(formData: FormData) {
+  const questionId = String(formData.get("questionId") ?? "");
+  const slug = String(formData.get("slug") ?? "");
+  const result = await createAnswerApi(questionId, String(formData.get("body") ?? ""));
+  if ("error" in result) {
+    redirect(`/products/${slug}?qaError=${encodeURIComponent(result.error)}`);
   }
   revalidatePath(`/products/${slug}`);
   redirect(`/products/${slug}`);

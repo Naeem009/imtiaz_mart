@@ -242,7 +242,7 @@ Never seed these accounts into a public or production database. Replace or remov
 
 ### 3.5 Without Docker
 
-Set `DATABASE_URL` to a PostgreSQL 17+ instance, then run migrations and seed as above. Redis and Elasticsearch URLs may point to managed or local services. Do not use local Docker hostnames or credentials in a deployed environment.
+Set `DATABASE_URL` and `DIRECT_URL` to a PostgreSQL 17+ instance, then run migrations and seed as above. Redis and Elasticsearch URLs may point to managed or local services. Do not use local Docker hostnames or credentials in a deployed environment. On Supabase, `DATABASE_URL` is the transaction pooler and `DIRECT_URL` is the session/direct URL.
 
 ---
 
@@ -254,7 +254,8 @@ The root `.env.example` is the authoritative variable inventory. Do not commit `
 
 | Variable | Consumer | Required | Notes |
 | --- | --- | --- | --- |
-| `DATABASE_URL` | API, Prisma | Yes | PostgreSQL connection string. |
+| `DATABASE_URL` | API, Prisma | Yes | PostgreSQL connection string. On Supabase, use the transaction pooler (`:6543`, `pgbouncer=true`). |
+| `DIRECT_URL` | Prisma migrate | Yes | Direct or session-mode Postgres URL. On Supabase, use session pooler (`:5432`). Local Docker can match `DATABASE_URL`. |
 | `REDIS_URL` | API | Local/production | Redis connection string. |
 | `ELASTICSEARCH_URL` | API | Optional | Search enhancement; PostgreSQL fallback exists. |
 | `ELASTICSEARCH_INDEX` | API | Optional | Catalog index name. |
@@ -667,11 +668,11 @@ The repository currently uses `vercel.json` with:
   "framework": "nextjs",
   "installCommand": "npm ci",
   "buildCommand": "npm run build:web",
-  "outputDirectory": "web/.next"
+  "outputDirectory": "apps/web/.next"
 }
 ```
 
-This configuration assumes the Vercel project **Root Directory is `apps`**. Vercel therefore resolves `web/.next` as `apps/web/.next`. Do not set the Vercel Root Directory to the repository root while retaining this output path. If the project root is changed to the repository root, update the configuration to use `apps/web/.next` and ensure the root workspace build remains available.
+This configuration works with Vercel **Root Directory at the repository root** (`outputDirectory` is `apps/web/.next`). If Root Directory is `apps`, use `apps/vercel.json` so `web/.next` resolves to `apps/web/.next`.
 
 Set Preview and Production variables:
 
@@ -683,9 +684,21 @@ After deployment, verify the homepage, a product page, search, authentication en
 
 ### 13.2 API deployment
 
-Deploy `apps/api/Dockerfile` to a host that supports a long-running Node process. Configure:
+The NestJS API can run on Vercel as a single Fluid compute function ([NestJS on Vercel](https://vercel.com/docs/frameworks/backend/nestjs)). Use a dedicated project such as `imtiaz-mart-api`, not the storefront project.
+
+Vercel project settings:
+
+- Connect the GitHub repository
+- **Root Directory** = `apps/api`
+- Enable **Include source files outside of the Root Directory in the Build Step** so workspace packages are uploaded
+- Framework: NestJS (`apps/api/vercel.json`)
+
+`apps/api/src/main.ts` must keep `app.listen()` and honor `process.env.PORT`. The monorepo install/build runs from the repository root via `apps/api/vercel.json`.
+
+Alternatively, deploy `apps/api/Dockerfile` to a host that supports a long-running Node process. Configure:
 
 - `DATABASE_URL`
+- `DIRECT_URL` (Prisma migrate; session/direct Postgres URL)
 - `REDIS_URL`
 - optional `ELASTICSEARCH_URL` and `ELASTICSEARCH_INDEX`
 - `APP_URL`, `API_URL`, and `CORS_ORIGIN`

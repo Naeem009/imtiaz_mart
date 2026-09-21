@@ -8,11 +8,12 @@ import { WishlistButton } from "@/components/product/wishlist-button";
 import { ProductGrid } from "@/components/shop/product-grid";
 import { ShopShell } from "@/components/layout/shop-shell";
 import { JsonLd } from "@/components/seo/json-ld";
+import { ProductQuestions } from "@/components/product/product-questions";
 import { fetchProduct, fetchRecommended } from "@/lib/catalog/fetch";
-import { fetchProductReviews } from "@/lib/commerce/api";
+import { fetchProductQuestions, fetchProductReviews } from "@/lib/commerce/api";
 import { getSession } from "@/lib/auth/session";
 import { getCompareIds } from "@/lib/compare/cookie";
-import { breadcrumbJsonLd, productJsonLd } from "@/lib/seo/json-ld";
+import { breadcrumbJsonLd, productJsonLd, qaPageJsonLd } from "@/lib/seo/json-ld";
 import { absoluteUrl, httpUrls } from "@/lib/seo/urls";
 import { CompareToggle } from "@/components/product/compare-toggle";
 
@@ -45,16 +46,17 @@ export default async function ProductPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; qaError?: string }>;
 }) {
   const { slug } = await params;
-  const { error } = await searchParams;
+  const { error, qaError } = await searchParams;
   const product = await fetchProduct(slug);
   if (!product) notFound();
 
-  const [related, reviews, user, compareIds] = await Promise.all([
+  const [related, reviews, questions, user, compareIds] = await Promise.all([
     fetchRecommended(),
     fetchProductReviews(slug),
+    fetchProductQuestions(slug),
     getSession(),
     getCompareIds(),
   ]);
@@ -62,6 +64,7 @@ export default async function ProductPage({
   return (
     <ShopShell>
       <JsonLd data={productJsonLd(product, reviews)} />
+      <JsonLd data={qaPageJsonLd(questions)} />
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "Home", path: "/" },
@@ -155,6 +158,14 @@ export default async function ProductPage({
           reviews={reviews}
           canWrite={Boolean(user)}
           error={error}
+        />
+
+        <ProductQuestions
+          slug={slug}
+          productId={product.id}
+          questions={questions}
+          canWrite={Boolean(user)}
+          error={qaError}
         />
 
         <section className="mt-16">

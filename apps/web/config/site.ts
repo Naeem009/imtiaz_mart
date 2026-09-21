@@ -1,5 +1,5 @@
 export const siteConfig = {
-  name: "ATVOO",
+  name: process.env.NEXT_PUBLIC_APP_NAME ?? "ATVOO",
   description:
     "Enterprise multi-vendor marketplace — premium shopping, trusted vendors, fast delivery.",
   url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
@@ -7,6 +7,6 @@ export const siteConfig = {
   currency: "PKR",
   logo: {
     src: "/atvoo_main_logo.png",
-    alt: "ATVOO",
+    alt: process.env.NEXT_PUBLIC_APP_NAME ?? "ATVOO",
   },
 } as const;

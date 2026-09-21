@@ -2,12 +2,14 @@
 // IDs: UUID (v7 at application layer when generating new records)
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ─── Authentication ─────────────────────────────────────────────────────────
@@ -33,8 +35,9 @@ model User {
   customer      Customer?
   ownedVendor   Vendor?
   vendorStaff   VendorStaff[]
-  affiliate     Affiliate?
+  affiliate      Affiliate?
   passwordResets PasswordResetToken[]
+  productAnswers ProductAnswer[]
 
   @@map("users")
 }
@@ -285,6 +288,7 @@ model Product {
   variants      ProductVariant[]
   cartItems     CartItem[]
   reviews       Review[]
+  questions     ProductQuestion[]
   wishlistItems WishlistItem[]
   returnItems   ReturnItem[]
 
@@ -420,6 +424,7 @@ model Customer {
   orders              Order[]
   reviews             Review[]
   reviewVotes         ReviewVote[]
+  questions           ProductQuestion[]
   wishlist            Wishlist?
   rewardAccount       RewardAccount?
   returnRequests      ReturnRequest[]
@@ -805,6 +810,38 @@ model Review {
   @@index([customerId])
   @@index([orderId])
   @@map("reviews")
+}
+
+model ProductQuestion {
+  id         String   @id @default(uuid())
+  productId  String   @map("product_id")
+  customerId String   @map("customer_id")
+  body       String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  product  Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customer Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  answers  ProductAnswer[]
+
+  @@index([productId])
+  @@index([customerId])
+  @@map("product_questions")
+}
+
+model ProductAnswer {
+  id         String   @id @default(uuid())
+  questionId String   @map("question_id")
+  userId     String   @map("user_id")
+  body       String   @db.Text
+  fromVendor Boolean  @default(false) @map("from_vendor")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  question ProductQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@index([userId])
+  @@map("product_answers")
 }
 
 model ReviewVote {

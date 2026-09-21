@@ -11,6 +11,23 @@ export interface ReviewDto {
   createdAt: string;
 }
 
+export interface ProductAnswerDto {
+  id: string;
+  body: string;
+  authorName: string;
+  fromVendor: boolean;
+  createdAt: string;
+}
+
+export interface ProductQuestionDto {
+  id: string;
+  productId: string;
+  body: string;
+  authorName: string;
+  createdAt: string;
+  answers: ProductAnswerDto[];
+}
+
 export interface WishlistItemDto {
   id: string;
   productId: string;

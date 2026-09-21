@@ -5,6 +5,7 @@ import type {
   CmsPageDto,
   FaqDto,
   PaymentDto,
+  ProductQuestionDto,
   ReturnRequestDto,
   ReviewDto,
   RewardAccountDto,
@@ -77,6 +78,18 @@ export async function fetchProductReviews(slug: string) {
   }
 }
 
+export async function fetchProductQuestions(slug: string) {
+  try {
+    const res = await fetch(`${siteConfig.apiUrl}/products/${slug}/questions`, {
+      next: { revalidate: 30 },
+    });
+    if (!res.ok) return [];
+    return res.json() as Promise<ProductQuestionDto[]>;
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchWishlist() {
   return (await authFetchJson<WishlistItemDto[]>("/customer/wishlist")) ?? [];
 }
@@ -129,6 +142,20 @@ export async function createReviewApi(body: {
   return authMutateJson("/customer/reviews", {
     method: "POST",
     body: JSON.stringify(body),
+  });
+}
+
+export async function createQuestionApi(body: { productId: string; body: string }) {
+  return authMutateJson("/products/questions", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function createAnswerApi(questionId: string, body: string) {
+  return authMutateJson(`/products/questions/${questionId}/answers`, {
+    method: "POST",
+    body: JSON.stringify({ body }),
   });
 }
 
