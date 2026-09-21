@@ -175,7 +175,7 @@ export class VendorsService {
     });
     if (!vendor) throw new NotFoundException("Vendor not found");
 
-    const { mapProductListItem } = await import("@/modules/catalog/catalog.mapper");
+    const { mapProductListItem } = await import("../catalog/catalog.mapper.js");
 
     return {
       id: vendor.id,
