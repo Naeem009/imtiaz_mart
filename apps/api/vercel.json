@@ -2,10 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nestjs",
   "installCommand": "cd ../.. && npm ci",
-  "buildCommand": "cd ../.. && npm run build --workspace=@imtiaz-mart/shared && npm run generate --workspace=@imtiaz-mart/database && npm run build --workspace=@imtiaz-mart/database && npm run build:api",
-  "functions": {
-    "src/main.ts": {
-      "includeFiles": "{../../node_modules/.prisma/client/**,../../node_modules/@prisma/client/**,../../packages/database/**}"
-    }
-  }
+  "buildCommand": "cd ../.. && npm run build --workspace=@imtiaz-mart/shared && npm run generate --workspace=@imtiaz-mart/database && npm run build --workspace=@imtiaz-mart/database && npm run build:api"
 }

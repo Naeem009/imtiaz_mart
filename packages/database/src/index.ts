@@ -1,4 +1,7 @@
 import { PrismaClient } from "@prisma/client";
+import { applyDatabaseEnv } from "./env";
+
+applyDatabaseEnv();
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -19,3 +22,4 @@ if (process.env.NODE_ENV !== "production") {
 
 export * from "@prisma/client";
 export { prisma as db };
+export { applyDatabaseEnv } from "./env";

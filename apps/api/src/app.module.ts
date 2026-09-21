@@ -47,6 +47,10 @@ import { QuestionsModule } from "@/modules/questions/questions.module";
           config.APP_URL ||= "https://imtiaz-mart.vercel.app";
           config.API_URL ||= "https://imtiaz-mart-api.vercel.app";
           config.CORS_ORIGIN ||= "https://imtiaz-mart.vercel.app";
+          config.DATABASE_URL ||=
+            config.POSTGRES_PRISMA_URL || config.POSTGRES_URL || config.DATABASE_URL;
+          config.DIRECT_URL ||=
+            config.POSTGRES_URL_NON_POOLING || config.DATABASE_URL;
         }
         const required = ["DATABASE_URL", "JWT_SECRET", "JWT_REFRESH_SECRET"];
         if (isProduction) {
