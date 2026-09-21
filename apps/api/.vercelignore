@@ -1,0 +1,4 @@
+# Keep this NestJS deployment as a single function.
+# Do not upload the Next.js storefront (it exceeds the Hobby 12-function cap).
+../web
+../web/**

@@ -1,4 +1,5 @@
-import { ValidationPipe, VersioningType } from "@nestjs/common";
+import "./register-runtime";
+import { RequestMethod, ValidationPipe, VersioningType } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
@@ -11,7 +12,12 @@ async function bootstrap() {
   app.getHttpAdapter().getInstance().use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
   app.setGlobalPrefix("api", {
-    exclude: [".well-known/(.*)", "llms.txt", "feeds/(.*)"],
+    exclude: [
+      { path: "/", method: RequestMethod.GET },
+      ".well-known/(.*)",
+      "llms.txt",
+      "feeds/(.*)",
+    ],
   });
   app.enableVersioning({
     type: VersioningType.URI,
@@ -70,4 +76,7 @@ async function bootstrap() {
   console.log(`Swagger: http://localhost:${port}/api/docs`);
 }
 
-bootstrap();
+bootstrap().catch((error: unknown) => {
+  console.error("API bootstrap failed", error);
+  throw error;
+});

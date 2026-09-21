@@ -1,0 +1,3 @@
+# Next.js Root Directory `apps` would otherwise treat this NestJS package as
+# Vercel /api serverless functions (one per file, over the Hobby limit of 12).
+api

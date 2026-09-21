@@ -81,12 +81,15 @@ an isolated testing database, then change or remove the demo accounts.
 
 ## Vercel deployment
 
-Use **two** Vercel projects from the same GitHub repo:
+Use **two** Vercel projects from the same GitHub repo. Hobby allows **12
+serverless functions per deployment**. NestJS must be one function; do not
+point the API project at Root Directory `apps` (Vercel would treat `apps/api`
+as many `/api` functions).
 
 | Project | Root Directory | Config | Public URL |
 | --- | --- | --- | --- |
-| `imtiaz-mart` (storefront) | repository root (or `apps`) | `vercel.json` / `apps/vercel.json` | `https://imtiaz-mart.vercel.app` |
-| `imtiaz-mart-api` (NestJS) | `apps/api` | `apps/api/vercel.json` | `https://imtiaz-mart-api.vercel.app` |
+| `imtiaz-mart` (storefront) | repository root **or** `apps/web` | `vercel.json` / `apps/web/vercel.json` | `https://imtiaz-mart.vercel.app` |
+| `imtiaz-mart-api` (NestJS) | **`apps/api` only** | `apps/api/vercel.json` | `https://imtiaz-mart-api.vercel.app` |
 
 Enable **Include source files outside of the Root Directory** on the API project.
 

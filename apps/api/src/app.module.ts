@@ -43,6 +43,11 @@ import { QuestionsModule } from "@/modules/questions/questions.module";
           : ["../../.env", ".env"],
       validate: (config) => {
         const isProduction = config.NODE_ENV === "production";
+        if (isProduction) {
+          config.APP_URL ||= "https://imtiaz-mart.vercel.app";
+          config.API_URL ||= "https://imtiaz-mart-api.vercel.app";
+          config.CORS_ORIGIN ||= "https://imtiaz-mart.vercel.app";
+        }
         const required = ["DATABASE_URL", "JWT_SECRET", "JWT_REFRESH_SECRET"];
         if (isProduction) {
           required.push("APP_URL", "CORS_ORIGIN", "SOCIAL_ENCRYPTION_KEY");
